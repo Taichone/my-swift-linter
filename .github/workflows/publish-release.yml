@@ -1,0 +1,62 @@
+name: Publish Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 0.1.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  BINARY_NAME: my-swift-linter
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate version format
+        run: |
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "error: version must be in semver format (e.g. 0.1.0)" >&2
+            exit 1
+          fi
+        env:
+          VERSION: ${{ inputs.version }}
+
+      - name: Select latest Xcode
+        run: |
+          latest=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          echo "Using $latest"
+          sudo xcode-select -s "$latest/Contents/Developer"
+          swift --version
+
+      - name: Build universal binary
+        run: swift build -c release --arch arm64 --arch x86_64
+
+      - name: Create archive
+        run: |
+          cd .build/apple/Products/Release
+          tar -czvf "${BINARY_NAME}-${VERSION}-darwin-universal.tar.gz" "${BINARY_NAME}"
+          shasum -a 256 "${BINARY_NAME}-${VERSION}-darwin-universal.tar.gz" \
+            > "${BINARY_NAME}-${VERSION}-darwin-universal.tar.gz.sha256"
+        env:
+          VERSION: ${{ inputs.version }}
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          cd .build/apple/Products/Release
+          gh release create "$VERSION" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$VERSION" \
+            --generate-notes \
+            "${BINARY_NAME}-${VERSION}-darwin-universal.tar.gz" \
+            "${BINARY_NAME}-${VERSION}-darwin-universal.tar.gz.sha256"

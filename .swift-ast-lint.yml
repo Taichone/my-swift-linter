@@ -1,0 +1,28 @@
+# 利用側プロジェクト向けの設定ひな型（例）。
+# 利用側では、このファイルをリポジトリ直下に置いて対象パスと各ルールの挙動
+# （severity・閾値など）をそのプロジェクトの規約に合わせて調整する。
+# （このリポジトリ自身のルール実装ファイルは複数ヘルパー型などを含むため、この設定で
+#  self-lint することは想定していない。CI は build + test のみを実行する。）
+included_paths:
+  - "Sources/**/*.swift"
+excluded_paths:
+  - ".build/**"
+  - "**/.build/**"
+
+rules:
+  # ドキュメントコメント必須。公開宣言の退行を防ぐため error で運用する。
+  missing-docs:
+    args:
+      severity: error
+
+  # 各ルールは ParameterizedRule。args で severity や閾値を上書きできる（既定値は
+  # Sources/Rules/*Rule.swift を参照）。使わないルールはここで severity を下げるか、
+  # そのプロジェクトの規約に合わせて調整する。
+  # one-type-per-file:
+  #   args:
+  #     severity: warning
+  #     check_file_name_match: true
+  # no-magic-number:
+  #   args:
+  #     severity: warning
+  #     allowed_values: ["0", "1"]
