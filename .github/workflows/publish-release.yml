@@ -13,6 +13,9 @@ permissions:
 
 env:
   BINARY_NAME: my-swift-linter
+  # swift-tools-version 6.3（swift-syntax 603 系）を要求するため、swift.org の
+  # ツールチェーンを導入して universal バイナリをビルドする。
+  SWIFT_VERSION: '6.3.2'
 
 jobs:
   build-macos:
@@ -29,12 +32,17 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
 
-      - name: Select latest Xcode
+      - name: Install Swift toolchain
         run: |
-          latest=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
-          echo "Using $latest"
-          sudo xcode-select -s "$latest/Contents/Developer"
-          swift --version
+          PKG_URL="https://download.swift.org/swift-${SWIFT_VERSION}-release/xcode/swift-${SWIFT_VERSION}-RELEASE/swift-${SWIFT_VERSION}-RELEASE-osx.pkg"
+          curl -fsSL -o /tmp/swift.pkg "$PKG_URL"
+          sudo installer -pkg /tmp/swift.pkg -target /
+          TOOLCHAIN_ID=$(plutil -extract CFBundleIdentifier raw \
+            "/Library/Developer/Toolchains/swift-${SWIFT_VERSION}-RELEASE.xctoolchain/Info.plist")
+          echo "TOOLCHAINS=$TOOLCHAIN_ID" >> "$GITHUB_ENV"
+
+      - name: Show Swift version
+        run: swift --version
 
       - name: Build universal binary
         run: swift build -c release --arch arm64 --arch x86_64
