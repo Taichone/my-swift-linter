@@ -120,11 +120,11 @@ struct MultilineFunctionCallRuleTests {
         #expect(rule.lint(source: source).count == 1)
     }
 
-    @Test("fix preserves tab indentation")
+    @Test("fix uses four spaces instead of indentation tabs")
     func tabIndentation() {
         let source = "\tfoo(first: 1,\n\t    second: 2)"
         let (_, fixed) = rule.lintAndFix(source: source)
-        #expect(fixed == "\tfoo(\n\t\tfirst: 1,\n\t\tsecond: 2\n\t)")
+        #expect(fixed == "\tfoo(\n    first: 1,\n    second: 2\n)")
         if let fixed { #expect(rule.lint(source: fixed).isEmpty) }
     }
 

@@ -27,6 +27,7 @@ public let rules = RuleSet {
     returnSwitchExpressionRule
     useURLFilePathRule
     multilineFunctionCallRule
+    indentationRule
     meaningfulSuiteDescriptionRule
     testFunctionNamingRule
     missingDocsRule

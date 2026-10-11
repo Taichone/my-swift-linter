@@ -11,19 +11,16 @@ let multilineFunctionCallRule = ParameterizedRule(
     id: "multiline-function-call",
     defaultArguments: MultilineFunctionCallArgs(),
 ) { file, context, args in
-    let visitor = MultilineFunctionCallVisitor(file: file, context: context, severity: args.severity)
+    let visitor = MultilineFunctionCallVisitor(context: context, severity: args.severity)
     visitor.walk(file)
 }
 
 private final class MultilineFunctionCallVisitor: SyntaxVisitor {
     private let context: LintContext
     private let severity: Severity
-    private let lines: [String]
-
-    init(file: SourceFileSyntax, context: LintContext, severity: Severity) {
+    init(context: LintContext, severity: Severity) {
         self.context = context
         self.severity = severity
-        lines = file.description.components(separatedBy: "\n")
         super.init(viewMode: .sourceAccurate)
     }
 
@@ -43,8 +40,9 @@ private final class MultilineFunctionCallVisitor: SyntaxVisitor {
         // A newline inside an argument expression also makes its enclosing call multiline.
         guard line(leftParen) != line(rightParen) else { return .visitChildren }
 
-        let baseIndent = indentation(on: line(leftParen))
-        let argumentIndent = baseIndent + (baseIndent.contains("\t") ? "\t" : "    ")
+        let level = FourSpaceIndentation(converter: location).level(of: node)
+        let baseIndent = String(repeating: " ", count: level * 4)
+        let argumentIndent = baseIndent + "    "
         let arguments = Array(node.arguments)
         var boundaries: [(TokenSyntax, TokenSyntax, String)] = []
         if arguments.isEmpty {
@@ -82,11 +80,6 @@ private final class MultilineFunctionCallVisitor: SyntaxVisitor {
             context.report(on: node, message: message, severity: severity)
         }
         return .visitChildren
-    }
-
-    private func indentation(on line: Int) -> String {
-        guard lines.indices.contains(line - 1) else { return "" }
-        return String(lines[line - 1].prefix { $0 == " " || $0 == "\t" })
     }
 
     private func startsWithNewline(between before: TokenSyntax, and after: TokenSyntax) -> Bool {
