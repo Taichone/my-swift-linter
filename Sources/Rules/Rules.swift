@@ -28,6 +28,7 @@ public let rules = RuleSet {
     useURLFilePathRule
     multilineFunctionCallRule
     indentationRule
+    lineLengthRule
     meaningfulSuiteDescriptionRule
     testFunctionNamingRule
     missingDocsRule

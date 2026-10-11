@@ -82,6 +82,7 @@ rules:
 | `use-url-file-path` | 非推奨の `URL(fileURLWithPath:)` を置換 | warning |
 | `multiline-function-call` | 複数行呼び出しの引数を4スペースで改行し、閉じ括弧を単独行にする | error |
 | `indentation` | ブロック・引数・配列などを1段4スペースでインデントし、タブを禁止（自動修正対応） | error |
+| `line-length` | インデント・コメント・文字列を含め、各行を最大100文字に制限 | error |
 | `missing-docs` | 公開宣言にドキュメントコメント必須 | error |
 | `meaningful-suite-description` | 冗長な `@Suite` description を検出 | warning |
 | `test-function-naming` | `@Test` 関数の命名規約 | warning |
@@ -89,6 +90,9 @@ rules:
 `indentation` は構文の入れ子に応じて4・8・12スペースのように検査する。継続式の行は
 4スペース単位で検査し、コメント・空行・文字列や正規表現リテラルの内容は対象外とする。
 `switch` の `case` は `switch` と同じ深さ、`#if` は追加のインデントなしとする。
+
+`line-length` は Unicode の文字数（Swift の `Character`）で数え、改行コードは含めない。
+100文字ちょうどは許可し、超えた行ごとに診断する。自動改行の Fix-It は提供しない。
 
 各ルールは1ルール1ファイル（`Sources/Rules/*Rule.swift`）で実装し、`Sources/Rules/Rules.swift` で
 `RuleSet` として合成している。すべて `ParameterizedRule` で、severity や閾値などを
