@@ -64,7 +64,7 @@ let missingDocsRule = ParameterizedRule(
     id: "missing-docs",
     defaultArguments: MissingDocsArgs(),
 ) { file, context, args in
-    let threshold = AccessLevel(rawValue: args.minAccessLevel) ?? .public
+    let threshold = DeclarationAccessLevel(rawValue: args.minAccessLevel) ?? .public
     let visitor = MissingDocsVisitor(
         context: context,
         threshold: threshold,
@@ -74,41 +74,15 @@ let missingDocsRule = ParameterizedRule(
     visitor.walk(file)
 }
 
-// MARK: - Access level
-
-private enum AccessLevel: String, Comparable {
-    case `private`
-    case `fileprivate`
-    case `internal`
-    case package
-    case `public`
-    case open
-
-    private var rank: Int {
-        switch self {
-        case .private: 0
-        case .fileprivate: 1
-        case .internal: 2
-        case .package: 3
-        case .public: 4
-        case .open: 5
-        }
-    }
-
-    static func < (lhs: AccessLevel, rhs: AccessLevel) -> Bool {
-        lhs.rank < rhs.rank
-    }
-}
-
 // MARK: - Visitor
 
 private final class MissingDocsVisitor: SyntaxVisitor {
     let context: LintContext
-    let threshold: AccessLevel
+    let threshold: DeclarationAccessLevel
     let severity: Severity
     let ignorePatterns: [IgnorePattern]
 
-    init(context: LintContext, threshold: AccessLevel, severity: Severity, ignorePatterns: [IgnorePattern]) {
+    init(context: LintContext, threshold: DeclarationAccessLevel, severity: Severity, ignorePatterns: [IgnorePattern]) {
         self.context = context
         self.threshold = threshold
         self.severity = severity
@@ -231,13 +205,15 @@ private final class MissingDocsVisitor: SyntaxVisitor {
         node: Syntax,
         name: String,
     ) {
-        guard let level = explicitAccessLevel(from: modifiers) else { return }
+        guard let level = DeclarationAccessLevel(modifiers: modifiers) else { return }
         guard level >= threshold else { return }
         guard !hasDocComment(trivia) else { return }
 
-        let modifierSet = modifierKeywords(from: modifiers)
-        guard !ignorePatterns.contains(where: { $0.matches(kind: kind, modifiers: modifierSet, name: name) }) else {
-            return
+        if !ignorePatterns.isEmpty {
+            let modifierSet = modifierKeywords(from: modifiers)
+            guard !ignorePatterns.contains(where: { $0.matches(kind: kind, modifiers: modifierSet, name: name) }) else {
+                return
+            }
         }
 
         context.report(
@@ -245,22 +221,6 @@ private final class MissingDocsVisitor: SyntaxVisitor {
             message: "\(name) has \(level.rawValue) access but is missing a doc comment.",
             severity: severity,
         )
-    }
-
-    /// Returns the explicit access level from the modifier list, or nil if none written.
-    private func explicitAccessLevel(from modifiers: DeclModifierListSyntax) -> AccessLevel? {
-        for modifier in modifiers {
-            switch modifier.name.tokenKind {
-            case .keyword(.open): return .open
-            case .keyword(.public): return .public
-            case .keyword(.package): return .package
-            case .keyword(.internal): return .internal
-            case .keyword(.fileprivate): return .fileprivate
-            case .keyword(.private): return .private
-            default: continue
-            }
-        }
-        return nil
     }
 
     /// Returns true if the trivia contains a doc line comment (`///`) or doc block comment (`/** */`).

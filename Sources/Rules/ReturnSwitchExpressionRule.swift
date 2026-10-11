@@ -107,10 +107,8 @@ private final class ReturnSwitchExpressionVisitor: SyntaxVisitor {
     }
 
     private func isSingleReturnCase(_ stmts: CodeBlockItemListSyntax) -> Bool {
-        let items = Array(stmts)
-        guard items.count == 1 else { return false }
-        guard let stmt = items[0].item.as(StmtSyntax.self),
-              let ret = stmt.as(ReturnStmtSyntax.self),
+        guard stmts.count == 1,
+              let ret = stmts.first?.item.as(ReturnStmtSyntax.self),
               ret.expression != nil
         else { return false }
         return true

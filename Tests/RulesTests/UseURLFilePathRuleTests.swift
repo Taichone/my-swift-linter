@@ -85,7 +85,34 @@ struct UseURLFilePathRuleTests {
         #expect(fixedSource?.contains("filePath:") == true)
         #expect(fixedSource?.contains("directoryHint:") == true)
         #expect(fixedSource?.contains("fileURLWithPath") == false)
-        #expect(fixedSource?.contains("isDirectory") == false)
+        #expect(fixedSource?.contains("isDirectory:") == false)
+        #expect(fixedSource == "let url = URL(filePath: \"/tmp/dir\", directoryHint: .isDirectory)")
+    }
+
+    @Test("directory booleans become DirectoryHint values", arguments: [
+        ("true", ".isDirectory"), ("false", ".notDirectory"),
+    ])
+    func directoryBooleanFix(value: String, hint: String) {
+        let source = "let url = URL(fileURLWithPath: path, isDirectory: \(value), relativeTo: base)"
+        let (_, fixed) = rule.lintAndFix(source: source)
+        #expect(fixed == "let url = URL(filePath: path, directoryHint: \(hint), relativeTo: base)")
+        if let fixed { #expect(rule.lint(source: fixed).isEmpty) }
+    }
+
+    @Test("dynamic directory expressions are evaluated once with preserved precedence")
+    func dynamicDirectoryFix() {
+        let source = "let url = URL(fileURLWithPath: path, isDirectory: cached ?? checkDirectory())"
+        let (_, fixed) = rule.lintAndFix(source: source)
+        #expect(fixed == "let url = URL(filePath: path, directoryHint: "
+            + "(cached ?? checkDirectory()) ? .isDirectory : .notDirectory)")
+    }
+
+    @Test("directory fixes preserve expression comments")
+    func directoryFixComments() {
+        let source = "let url = URL(fileURLWithPath: path, isDirectory: /* before */ false /* after */)"
+        let (_, fixed) = rule.lintAndFix(source: source)
+        #expect(fixed == "let url = URL(filePath: path, directoryHint: /* before */ "
+            + ".notDirectory /* after */)")
     }
 
     // MARK: - No violations

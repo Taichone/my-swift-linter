@@ -33,31 +33,22 @@ private final class UseURLFilePathVisitor: SyntaxVisitor {
             return .visitChildren
         }
 
-        let replacement = deprecatedLabel == "fileURLWithPath" ? "filePath" : "filePath"
         let hint = deprecatedLabel == "fileURLWithPath:isDirectory:"
             ? " Use `URL(filePath:directoryHint:)` instead."
             : " Use `URL(filePath:)` instead."
 
-        if let fixed = buildFixed(node: node, firstLabel: deprecatedLabel) {
-            context.reportWithFix(
-                on: node,
-                message: "Deprecated `URL(\(deprecatedLabel):)` initializer.\(hint)",
-                severity: severity,
-                fixIts: [
-                    FixIt.replace(
-                        message: SimpleFixItMessage("Replace with `URL(\(replacement):)`"),
-                        oldNode: node,
-                        newNode: fixed,
-                    ),
-                ],
-            )
-        } else {
-            context.report(
-                on: node,
-                message: "Deprecated `URL(\(deprecatedLabel):)` initializer.\(hint)",
-                severity: severity,
-            )
-        }
+        context.reportWithFix(
+            on: node,
+            message: "Deprecated `URL(\(deprecatedLabel):)` initializer.\(hint)",
+            severity: severity,
+            fixIts: [
+                FixIt.replace(
+                    message: SimpleFixItMessage("Replace with `URL(filePath:)`"),
+                    oldNode: node,
+                    newNode: buildFixed(node: node),
+                ),
+            ],
+        )
 
         return .visitChildren
     }
@@ -85,35 +76,55 @@ private final class UseURLFilePathVisitor: SyntaxVisitor {
 
     /// Returns the deprecated label name if this call uses `fileURLWithPath` as first argument label.
     private func deprecatedFirstLabel(_ node: FunctionCallExprSyntax) -> String? {
-        let args = Array(node.arguments)
-        guard let first = args.first,
+        var arguments = node.arguments.makeIterator()
+        guard let first = arguments.next(),
               let label = first.label?.text,
               label == "fileURLWithPath"
         else { return nil }
 
-        let hasIsDirectory = args.count >= 2 && args[1].label?.text == "isDirectory"
+        let hasIsDirectory = arguments.next()?.label?.text == "isDirectory"
         return hasIsDirectory ? "fileURLWithPath:isDirectory:" : "fileURLWithPath"
     }
 
     // MARK: - Fix-it construction
 
-    private func buildFixed(node: FunctionCallExprSyntax, firstLabel _: String) -> FunctionCallExprSyntax? {
-        var newArgs = Array(node.arguments)
-        guard !newArgs.isEmpty else { return nil }
-
-        // Replace first label: fileURLWithPath → filePath
-        let firstArg = newArgs[0]
-        guard let oldLabel = firstArg.label else { return nil }
-        let newLabel = oldLabel.with(\.tokenKind, .identifier("filePath"))
-        newArgs[0] = firstArg.with(\.label, newLabel)
-
-        // Replace second label: isDirectory → directoryHint (if present)
-        if newArgs.count >= 2, let secondLabel = newArgs[1].label, secondLabel.text == "isDirectory" {
-            let newSecondLabel = secondLabel.with(\.tokenKind, .identifier("directoryHint"))
-            newArgs[1] = newArgs[1].with(\.label, newSecondLabel)
+    private func buildFixed(node: FunctionCallExprSyntax) -> FunctionCallExprSyntax {
+        let arguments = node.arguments.enumerated().map { index, argument in
+            guard let label = argument.label else { return argument }
+            if index == 0 {
+                return argument.with(\.label, label.with(\.tokenKind, .identifier("filePath")))
+            }
+            if index == 1, label.text == "isDirectory" {
+                return argument
+                    .with(\.label, label.with(\.tokenKind, .identifier("directoryHint")))
+                    .with(\.expression, directoryHint(for: argument.expression))
+            }
+            return argument
         }
+        return node.with(\.arguments, LabeledExprListSyntax(arguments))
+    }
 
-        let newArgList = LabeledExprListSyntax(newArgs)
-        return node.with(\.arguments, newArgList)
+    private func directoryHint(for expression: ExprSyntax) -> ExprSyntax {
+        func hint(_ name: String) -> ExprSyntax {
+            ExprSyntax(MemberAccessExprSyntax(declName: DeclReferenceExprSyntax(baseName: .identifier(name))))
+        }
+        let replacement: ExprSyntax
+        if let boolean = expression.as(BooleanLiteralExprSyntax.self) {
+            replacement = hint(boolean.literal.tokenKind == .keyword(.true) ? "isDirectory" : "notDirectory")
+        } else {
+            // Parenthesize the original expression to preserve precedence and evaluate it once.
+            replacement = ExprSyntax(TernaryExprSyntax(
+                condition: TupleExprSyntax(elements: LabeledExprListSyntax([
+                    LabeledExprSyntax(expression: expression.trimmed),
+                ])),
+                questionMark: .infixQuestionMarkToken(leadingTrivia: .space, trailingTrivia: .space),
+                thenExpression: hint("isDirectory"),
+                colon: .colonToken(leadingTrivia: .space, trailingTrivia: .space),
+                elseExpression: hint("notDirectory"),
+            ))
+        }
+        return replacement
+            .with(\.leadingTrivia, expression.leadingTrivia)
+            .with(\.trailingTrivia, expression.trailingTrivia)
     }
 }

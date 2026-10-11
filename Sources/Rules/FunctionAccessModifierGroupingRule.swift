@@ -21,19 +21,10 @@ let functionAccessModifierGroupingRule = ParameterizedRule(
     visitor.walk(file)
 }
 
-// MARK: - Access Level
-
-private enum FuncAccessLevel: Int, Comparable {
-    case open = 0
-    case `public` = 1
-    case package = 2
-    case `internal` = 3
-    case `fileprivate` = 4
-    case `private` = 5
-
-    static func < (lhs: FuncAccessLevel, rhs: FuncAccessLevel) -> Bool {
-        lhs.rawValue < rhs.rawValue
-    }
+private struct FunctionInfo {
+    let index: Int
+    let member: MemberBlockItemSyntax
+    let level: DeclarationAccessLevel
 }
 
 // MARK: - Visitor
@@ -80,13 +71,19 @@ private final class FunctionAccessGroupingVisitor: SyntaxVisitor {
         reportOn typeNode: Syntax,
     ) {
         let members = Array(memberBlock.members)
-        let funcIndices = members.indices.filter { members[$0].decl.as(FunctionDeclSyntax.self) != nil }
-        guard funcIndices.count >= 2 else { return }
+        let functions = members.enumerated().compactMap { index, member -> FunctionInfo? in
+            guard let function = member.decl.as(FunctionDeclSyntax.self) else { return nil }
+            return FunctionInfo(
+                index: index,
+                member: member,
+                level: DeclarationAccessLevel(modifiers: function.modifiers) ?? .internal,
+            )
+        }
+        guard functions.count >= 2 else { return }
 
-        let levels = funcIndices.map { accessLevel(of: members[$0].decl) }
-        guard !isGrouped(levels) else { return }
+        guard !isGrouped(functions) else { return }
 
-        let sorted = buildSorted(members: members, funcIndices: funcIndices)
+        let sorted = buildSorted(members: members, functions: functions)
         let newBlock = memberBlock.with(\.members, MemberBlockItemListSyntax(sorted))
 
         context.reportWithFix(
@@ -105,14 +102,12 @@ private final class FunctionAccessGroupingVisitor: SyntaxVisitor {
 
     // MARK: - Grouping check
 
-    private func isGrouped(_ levels: [FuncAccessLevel]) -> Bool {
-        guard levels.count >= 2 else { return true }
-        var seen = Set<FuncAccessLevel>()
-        var current: FuncAccessLevel?
-        for level in levels where level != current {
-            if seen.contains(level) { return false }
-            seen.insert(level)
-            current = level
+    private func isGrouped(_ functions: [FunctionInfo]) -> Bool {
+        var seen: Set<DeclarationAccessLevel> = []
+        var current: DeclarationAccessLevel?
+        for function in functions where function.level != current {
+            guard seen.insert(function.level).inserted else { return false }
+            current = function.level
         }
         return true
     }
@@ -122,36 +117,16 @@ private final class FunctionAccessGroupingVisitor: SyntaxVisitor {
     /// Stable-sorts function declarations by access level, preserving non-function member positions.
     private func buildSorted(
         members: [MemberBlockItemSyntax],
-        funcIndices: [Int],
+        functions: [FunctionInfo],
     ) -> [MemberBlockItemSyntax] {
-        let sortedFuncs = funcIndices
-            .map { (index: $0, member: members[$0], level: accessLevel(of: members[$0].decl)) }
-            .sorted { $0.level < $1.level }
+        let sortedFuncs = functions
+            .sorted { $0.level > $1.level }
             .map(\.member)
 
         var result = members
-        for (idx, originalIndex) in funcIndices.enumerated() {
-            result[originalIndex] = sortedFuncs[idx]
+        for (idx, function) in functions.enumerated() {
+            result[function.index] = sortedFuncs[idx]
         }
         return result
-    }
-
-    // MARK: - Access level extraction
-
-    /// Returns the access level of a function declaration; defaults to `internal` when unspecified.
-    private func accessLevel(of decl: DeclSyntax) -> FuncAccessLevel {
-        guard let funcDecl = decl.as(FunctionDeclSyntax.self) else { return .internal }
-        for modifier in funcDecl.modifiers {
-            switch modifier.name.tokenKind {
-            case .keyword(.open): return .open
-            case .keyword(.public): return .public
-            case .keyword(.package): return .package
-            case .keyword(.internal): return .internal
-            case .keyword(.fileprivate): return .fileprivate
-            case .keyword(.private): return .private
-            default: continue
-            }
-        }
-        return .internal
     }
 }

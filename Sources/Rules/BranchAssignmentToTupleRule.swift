@@ -254,10 +254,10 @@ private final class BranchAssignmentToTupleVisitor: SyntaxVisitor {
         }
         // Fallback: SequenceExprSyntax with [lhs, AssignmentExpr, rhs]
         if let seq = expr.as(SequenceExprSyntax.self) {
-            let elements = Array(seq.elements)
-            if elements.count == 3,
-               let lhsIdent = elements[0].as(DeclReferenceExprSyntax.self),
-               elements[1].is(AssignmentExprSyntax.self)
+            var elements = seq.elements.makeIterator()
+            if seq.elements.count == 3,
+               let lhsIdent = elements.next()?.as(DeclReferenceExprSyntax.self),
+               elements.next()?.is(AssignmentExprSyntax.self) == true
             {
                 return lhsIdent.baseName.text
             }

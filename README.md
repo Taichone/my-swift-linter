@@ -51,6 +51,16 @@ rules:
     args:
       severity: error
 
+  # Require ordinary and documentation comments to be written in English.
+  english-comments:
+    args:
+      severity: error
+
+  # Require one blank line before methods and documented properties.
+  declaration-spacing:
+    args:
+      severity: error
+
   # 各ルールは ParameterizedRule。args で severity や閾値を上書きできる。
   no-magic-number:
     args:
@@ -82,7 +92,9 @@ rules:
 | `use-url-file-path` | 非推奨の `URL(fileURLWithPath:)` を置換 | warning |
 | `multiline-function-call` | 複数行呼び出しの引数を4スペースで改行し、閉じ括弧を単独行にする | error |
 | `indentation` | ブロック・引数・配列などを1段4スペースでインデントし、タブを禁止（自動修正対応） | error |
+| `declaration-spacing` | メソッドとドキュメントコメント付きプロパティの前に空行をちょうど1行入れる（自動修正対応） | error |
 | `line-length` | インデント・コメント・文字列を含め、各行を最大100文字に制限 | error |
+| `english-comments` | 通常コメント・ドキュメントコメントの非ラテン文字を検出し、英語での記述を要求 | error |
 | `missing-docs` | 公開宣言にドキュメントコメント必須 | error |
 | `meaningful-suite-description` | 冗長な `@Suite` description を検出 | warning |
 | `test-function-naming` | `@Test` 関数の命名規約 | warning |
@@ -91,8 +103,20 @@ rules:
 4スペース単位で検査し、コメント・空行・文字列や正規表現リテラルの内容は対象外とする。
 `switch` の `case` は `switch` と同じ深さ、`#if` は追加のインデントなしとする。
 
+`declaration-spacing` は型・extension・protocol のメソッド（`func`・`init`・`deinit`・`subscript`）と、
+ドキュメントコメント付きプロパティの前に、空行をちょうど1行要求する。型の最初のメンバーも対象。
+`///`・`/** */` がある場合はその上、属性がある場合は属性も含む宣言のまとまりの上を検査する。
+ドキュメントコメントのないプロパティ、グローバル宣言・ローカル宣言・アクセサーは対象外。
+自動修正はコメント・属性・改行コードを保ち、空行の不足を補い、余分な空行を1行にそろえる。
+
 `line-length` は Unicode の文字数（Swift の `Character`）で数え、改行コードは含めない。
 100文字ちょうどは許可し、超えた行ごとに診断する。自動改行の Fix-It は提供しない。
+
+`english-comments` は `//`・`/* */`・`///`・`/** */` を対象とし、日本語・中国語・韓国語などの
+非ラテン文字を含むコメントの開始位置に診断する。文字列や正規表現リテラルの内容は対象外。
+Unicode の句読点・記号・絵文字・アクセント付きラテン文字は許可する。
+文字の種類による検査のため、ラテン文字だけで書かれたフランス語などは判別しない。
+翻訳の Fix-It は提供しない。
 
 各ルールは1ルール1ファイル（`Sources/Rules/*Rule.swift`）で実装し、`Sources/Rules/Rules.swift` で
 `RuleSet` として合成している。すべて `ParameterizedRule` で、severity や閾値などを

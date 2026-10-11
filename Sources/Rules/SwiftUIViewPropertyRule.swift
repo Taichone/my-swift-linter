@@ -48,12 +48,12 @@ private final class SwiftUIViewPropertyVisitor: SyntaxVisitor {
 
     override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
         guard isSomeViewComputedProperty(node) else { return .visitChildren }
-        guard let body = computedPropertyBody(node) else { return .visitChildren }
+        guard let statements = computedPropertyStatements(node) else { return .visitChildren }
 
-        checkReturnStatements(in: body.statements)
+        checkReturnStatements(in: statements)
 
-        if !hasViewBuilderAttribute(node) {
-            checkViewBuilderRequired(for: node, statements: body.statements)
+        if !hasViewBuilderAttribute(node.attributes) {
+            checkViewBuilderRequired(for: node, statements: statements)
         }
 
         return .visitChildren
@@ -65,7 +65,7 @@ private final class SwiftUIViewPropertyVisitor: SyntaxVisitor {
 
         checkReturnStatements(in: body.statements)
 
-        if !hasViewBuilderAttributeOnFunction(node) {
+        if !hasViewBuilderAttribute(node.attributes) {
             checkViewBuilderRequiredForFunction(for: node, statements: body.statements)
         }
 
@@ -174,24 +174,20 @@ private final class SwiftUIViewPropertyVisitor: SyntaxVisitor {
         return false
     }
 
-    /// Returns the implicit getter body of a computed property, or `nil` for explicit getter syntax.
-    private func computedPropertyBody(_ node: VariableDeclSyntax) -> CodeBlockSyntax? {
+    /// Returns the original getter statements so diagnostics and fixes retain file positions.
+    private func computedPropertyStatements(_ node: VariableDeclSyntax) -> CodeBlockItemListSyntax? {
         for binding in node.bindings {
             if let accessor = binding.accessorBlock,
                case let .getter(stmts) = accessor.accessors
             {
-                return CodeBlockSyntax(
-                    leftBrace: accessor.leftBrace,
-                    statements: stmts,
-                    rightBrace: accessor.rightBrace,
-                )
+                return stmts
             }
         }
         return nil
     }
 
-    private func hasViewBuilderAttribute(_ node: VariableDeclSyntax) -> Bool {
-        node.attributes.contains { attr in
+    private func hasViewBuilderAttribute(_ attributes: AttributeListSyntax) -> Bool {
+        attributes.contains { attr in
             guard case let .attribute(attrSyntax) = attr else { return false }
             return attrSyntax.attributeName.description.trimmingCharacters(in: .whitespaces) == "ViewBuilder"
         }
@@ -202,12 +198,5 @@ private final class SwiftUIViewPropertyVisitor: SyntaxVisitor {
         guard let returnType = node.signature.returnClause?.type else { return false }
         let typeText = returnType.description.trimmingCharacters(in: .whitespaces)
         return typeText.hasPrefix("some ") && typeText.contains("View")
-    }
-
-    private func hasViewBuilderAttributeOnFunction(_ node: FunctionDeclSyntax) -> Bool {
-        node.attributes.contains { attr in
-            guard case let .attribute(attrSyntax) = attr else { return false }
-            return attrSyntax.attributeName.description.trimmingCharacters(in: .whitespaces) == "ViewBuilder"
-        }
     }
 }

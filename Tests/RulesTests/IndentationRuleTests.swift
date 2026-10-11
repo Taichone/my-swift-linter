@@ -182,4 +182,20 @@ struct IndentationRuleTests {
         #expect(diagnostics.count == 1)
         #expect(fixed == "let values = [\n    \"text\"\n]")
     }
+
+    @Test("cached contexts keep sibling depths and nested literal contents independent")
+    func siblingContexts() {
+        let source = "func run() {\n    consume(\n        text: \"\"\"\n unindented \\(value)\n \"\"\"\n    )\n    consume(action: {\n        execute()\n    })\n    let values = [\n        1,\n        2\n    ]\n    execute()\n}\nexecute()"
+        #expect(rule.lint(source: source).isEmpty)
+    }
+
+    @Test("line caching handles Unicode and physical newline offsets", arguments: ["\n", "\r\n", "\r"])
+    func unicodeLineOffsets(newline: String) {
+        let source = "func run() {\n    let café = \"🙂\"; consume(café)\n  execute()\n}"
+            .replacingOccurrences(of: "\n", with: newline)
+        let (diagnostics, fixed) = rule.lintAndFix(source: source)
+        #expect(diagnostics.count == 1)
+        #expect(diagnostics.first?.line == 3)
+        #expect(fixed == source.replacingOccurrences(of: "  execute()", with: "    execute()"))
+    }
 }

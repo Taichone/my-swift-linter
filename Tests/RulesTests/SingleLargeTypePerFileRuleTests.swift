@@ -112,6 +112,29 @@ struct SingleLargeTypePerFileRuleTests {
 
     // MARK: - All type kinds
 
+    @Test("public types nested in extensions are excluded")
+    func extensionTypesExcluded() {
+        let source = publicStruct(name: "Foo", lines: 60)
+            + "\nextension Foo {\n" + publicStruct(name: "Helper", lines: 60) + "\n}"
+        #expect(rule.lint(source: source).isEmpty)
+    }
+
+    @Test("large types in nested conditional compilation are collected")
+    func conditionalCompilationTypes() {
+        let source = "#if DEBUG\n#if FEATURE\n" + publicStruct(name: "Foo", lines: 60)
+            + "\n#endif\n#else\n" + publicStruct(name: "Bar", lines: 60) + "\n#endif"
+        #expect(rule.lint(source: source).count == 2)
+    }
+
+    @Test("line thresholds support all physical newline forms", arguments: ["\n", "\r\n", "\r"])
+    func physicalLineCounts(newline: String) {
+        let source = (publicStruct(name: "Foo", lines: 50) + "\n" + publicStruct(name: "Bar", lines: 50))
+            .replacingOccurrences(of: "\n", with: newline)
+        let diagnostics = rule.lint(source: source)
+        #expect(diagnostics.count == 2)
+        #expect(diagnostics.first?.message.contains("Foo is 50 lines") == true)
+    }
+
     @Test("detects all type declaration kinds", arguments: [
         ("public enum", "enum"),
         ("public class", "class"),

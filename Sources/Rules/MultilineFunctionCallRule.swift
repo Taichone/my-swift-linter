@@ -18,9 +18,11 @@ let multilineFunctionCallRule = ParameterizedRule(
 private final class MultilineFunctionCallVisitor: SyntaxVisitor {
     private let context: LintContext
     private let severity: Severity
+    private let indentation: FourSpaceIndentation
     init(context: LintContext, severity: Severity) {
         self.context = context
         self.severity = severity
+        indentation = FourSpaceIndentation(converter: context.sourceLocationConverter)
         super.init(viewMode: .sourceAccurate)
     }
 
@@ -40,7 +42,7 @@ private final class MultilineFunctionCallVisitor: SyntaxVisitor {
         // A newline inside an argument expression also makes its enclosing call multiline.
         guard line(leftParen) != line(rightParen) else { return .visitChildren }
 
-        let level = FourSpaceIndentation(converter: location).level(of: node)
+        let level = indentation.level(of: node)
         let baseIndent = String(repeating: " ", count: level * 4)
         let argumentIndent = baseIndent + "    "
         let arguments = Array(node.arguments)
@@ -100,9 +102,7 @@ private final class MultilineFunctionCallVisitor: SyntaxVisitor {
             let currentBefore = replacements[beforeKey]?.new ?? before
             let currentAfter = replacements[afterKey]?.new ?? after
             replacements[beforeKey] = (before, currentBefore.with(\.trailingTrivia, []))
-            let newTrivia = indent.reduce(Trivia.newlines(1)) { trivia, character in
-                trivia + (character == "\t" ? .tabs(1) : .spaces(1))
-            }
+            let newTrivia = Trivia(pieces: [.newlines(1), .spaces(indent.utf8.count)])
             replacements[afterKey] = (after, currentAfter.with(\.leadingTrivia, newTrivia))
         }
         let changes = replacements.values.map { replacement in

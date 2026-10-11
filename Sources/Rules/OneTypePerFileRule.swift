@@ -51,9 +51,7 @@ let oneTypePerFileRule = ParameterizedRule(
     id: "one-type-per-file",
     defaultArguments: OneTypePerFileArgs(),
 ) { file, context, args in
-    let collector = TopLevelTypeCollector()
-    collector.walk(file)
-    let types = collector.types
+    let types = TopLevelTypeDeclaration.collect(in: file.statements)
     guard !types.isEmpty else { return }
 
     let distinctNames = Set(types.map(\.name))
@@ -85,78 +83,6 @@ let oneTypePerFileRule = ParameterizedRule(
                 severity: args.severity,
             )
         }
-    }
-}
-
-// MARK: - Collector
-
-/// Collects type declarations at the top level (and directly under `#if`/`#else` branches).
-///
-/// Types nested inside a type or extension body are excluded via `nestingLevel`.
-/// Because `IfConfigDecl` does not increase `nestingLevel`, types directly under a branch are treated as top level.
-private final class TopLevelTypeCollector: SyntaxVisitor {
-    struct TypeDecl {
-        let name: String
-        let nameToken: TokenSyntax
-    }
-
-    private(set) var types: [TypeDecl] = []
-    private var nestingLevel = 0
-
-    init() {
-        super.init(viewMode: .sourceAccurate)
-    }
-
-    override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-        record(node.name)
-        nestingLevel += 1
-        return .visitChildren
-    }
-
-    override func visitPost(_: StructDeclSyntax) { nestingLevel -= 1 }
-
-    override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-        record(node.name)
-        nestingLevel += 1
-        return .visitChildren
-    }
-
-    override func visitPost(_: ClassDeclSyntax) { nestingLevel -= 1 }
-
-    override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-        record(node.name)
-        nestingLevel += 1
-        return .visitChildren
-    }
-
-    override func visitPost(_: EnumDeclSyntax) { nestingLevel -= 1 }
-
-    override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
-        record(node.name)
-        nestingLevel += 1
-        return .visitChildren
-    }
-
-    override func visitPost(_: ActorDeclSyntax) { nestingLevel -= 1 }
-
-    // The body of an extension / protocol is not top level, so treat it as nested
-    override func visit(_: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
-        nestingLevel += 1
-        return .visitChildren
-    }
-
-    override func visitPost(_: ExtensionDeclSyntax) { nestingLevel -= 1 }
-
-    override func visit(_: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
-        nestingLevel += 1
-        return .visitChildren
-    }
-
-    override func visitPost(_: ProtocolDeclSyntax) { nestingLevel -= 1 }
-
-    private func record(_ name: TokenSyntax) {
-        guard nestingLevel == 0 else { return }
-        types.append(TypeDecl(name: name.text, nameToken: name))
     }
 }
 

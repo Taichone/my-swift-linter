@@ -29,10 +29,20 @@ let singleLargeTypePerFileRule = ParameterizedRule(
     id: "single-large-type-per-file",
     defaultArguments: SingleLargeTypeArgs()
 ) { file, context, args in
-    let visitor = LargeTypeCollector(minLines: args.warningLines)
-    visitor.walk(file)
+    let candidates = TopLevelTypeDeclaration.collect(in: file.statements).filter { type in
+        type.modifiers.contains {
+            $0.name.tokenKind == .keyword(.public) || $0.name.tokenKind == .keyword(.package)
+        }
+    }
+    guard candidates.count >= 2 else { return }
 
-    let largeTypes = visitor.largeTypes
+    let converter = context.sourceLocationConverter
+    let largeTypes = candidates.compactMap { type -> LargeTypeInfo? in
+        let lineCount = converter.location(for: type.node.endPosition).line
+            - converter.location(for: type.node.position).line + 1
+        guard lineCount >= args.warningLines else { return nil }
+        return LargeTypeInfo(name: type.name, lineCount: lineCount, node: type.node)
+    }
     guard largeTypes.count >= 2 else { return }
     for info in largeTypes {
         let severity: Severity = info.lineCount >= args.errorLines ? .error : .warning
@@ -51,79 +61,4 @@ private struct LargeTypeInfo {
     let name: String
     let lineCount: Int
     let node: Syntax
-}
-
-private final class LargeTypeCollector: SyntaxVisitor {
-    let minLines: Int
-    var largeTypes: [LargeTypeInfo] = []
-    /// Only top-level types are counted; nested types are excluded.
-    private var nestingLevel = 0
-
-    init(minLines: Int) {
-        self.minLines = minLines
-        super.init(viewMode: .sourceAccurate)
-    }
-
-    // MARK: - Type declarations
-
-    override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-        checkType(name: node.name.text, modifiers: node.modifiers, syntax: Syntax(node))
-        nestingLevel += 1
-        return .visitChildren
-    }
-
-    override func visitPost(_: StructDeclSyntax) {
-        nestingLevel -= 1
-    }
-
-    override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-        checkType(name: node.name.text, modifiers: node.modifiers, syntax: Syntax(node))
-        nestingLevel += 1
-        return .visitChildren
-    }
-
-    override func visitPost(_: ClassDeclSyntax) {
-        nestingLevel -= 1
-    }
-
-    override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-        checkType(name: node.name.text, modifiers: node.modifiers, syntax: Syntax(node))
-        nestingLevel += 1
-        return .visitChildren
-    }
-
-    override func visitPost(_: EnumDeclSyntax) {
-        nestingLevel -= 1
-    }
-
-    override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
-        checkType(name: node.name.text, modifiers: node.modifiers, syntax: Syntax(node))
-        nestingLevel += 1
-        return .visitChildren
-    }
-
-    override func visitPost(_: ActorDeclSyntax) {
-        nestingLevel -= 1
-    }
-
-    // MARK: - Helper
-
-    private func checkType(
-        name: String,
-        modifiers: DeclModifierListSyntax,
-        syntax: Syntax
-    ) {
-        guard nestingLevel == 0 else { return }
-        let isPublicOrPackage = modifiers.contains {
-            $0.name.tokenKind == .keyword(.public) || $0.name.tokenKind == .keyword(.package)
-        }
-        guard isPublicOrPackage else { return }
-        let lineCount = Self.countLines(syntax)
-        guard lineCount >= minLines else { return }
-        largeTypes.append(LargeTypeInfo(name: name, lineCount: lineCount, node: syntax))
-    }
-
-    private static func countLines(_ node: Syntax) -> Int {
-        node.description.components(separatedBy: "\n").count
-    }
 }

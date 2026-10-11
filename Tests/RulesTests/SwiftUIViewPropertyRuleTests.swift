@@ -12,6 +12,40 @@ struct SwiftUIViewPropertyRuleTests {
 
     // MARK: - Pattern A: return is forbidden
 
+    @Test("return fix preserves file positions and surrounding source")
+    func returnFixPreservesSource() throws {
+        let source = """
+        // prefix 1
+        // prefix 2
+        // prefix 3
+        struct MyView {
+            var content: some View {
+                return Text("hello")
+            }
+        }
+        """
+        let (diagnostics, fixed) = rule.lintAndFix(source: source)
+        let diagnostic = try #require(diagnostics.first)
+        #expect(diagnostics.count == 1)
+        #expect(diagnostic.line == 6)
+        #expect(diagnostic.column == 9)
+        #expect(fixed == source.replacingOccurrences(of: "return Text", with: "Text"))
+        if let fixed { #expect(rule.lint(source: fixed).isEmpty) }
+    }
+
+    @Test("return fixes keep distinct positions in multiple computed properties")
+    func multiplePropertyReturnFixes() {
+        let source = """
+        struct MyView {
+            var first: some View { return Text("first") }
+            var second: some View { return Text("second") }
+        }
+        """
+        let (diagnostics, fixed) = rule.lintAndFix(source: source)
+        #expect(diagnostics.map(\.line) == [2, 3])
+        #expect(fixed == source.replacingOccurrences(of: "return Text", with: "Text"))
+    }
+
     @Test("error when return is used in some View var without @ViewBuilder")
     func returnWithoutViewBuilder() async {
         let source = """

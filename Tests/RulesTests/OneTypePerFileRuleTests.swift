@@ -75,6 +75,37 @@ struct OneTypePerFileRuleTests {
         #expect(diagnostics.isEmpty)
     }
 
+    @Test("local types inside functions and closures are not top-level", arguments: [
+        "func helper() { struct Local {} }",
+        "let helper = { struct Local {} }",
+        "protocol Namespace { struct Local {} }",
+    ])
+    func localTypesAreExcluded(nestedSource: String) {
+        let diagnostics = oneTypePerFileRule.lint(
+            source: "struct Foo {}\n" + nestedSource,
+            fileName: "Foo.swift",
+        )
+        #expect(diagnostics.isEmpty)
+    }
+
+    @Test("nested conditional compilation branches are collected")
+    func nestedConditionalCompilation() {
+        let source = """
+        #if DEBUG
+        #if FEATURE
+        struct Foo {}
+        #else
+        enum Bar {}
+        #endif
+        #else
+        actor Baz {}
+        #endif
+        """
+        let diagnostics = oneTypePerFileRule.lint(source: source, fileName: "Foo.swift")
+        #expect(diagnostics.count == 3)
+        #expect(diagnostics.map(\.line) == [3, 5, 8])
+    }
+
     @Test func severityをYAMLで上書きできる() {
         let diagnostics = oneTypePerFileRule.lint(
             source: """

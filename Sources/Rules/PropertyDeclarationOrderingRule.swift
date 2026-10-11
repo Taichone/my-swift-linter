@@ -30,7 +30,7 @@ let propertyDeclarationOrderingRule = ParameterizedRule(
 private struct PropertySortKey: Comparable {
     /// Wrapper name; empty string means no wrapper (sorted last via "~" sentinel).
     let wrapperName: String
-    let accessLevel: AccessLevel
+    let accessLevel: DeclarationAccessLevel
 
     private var wrapperSortKey: String {
         wrapperName.isEmpty ? "~" : wrapperName
@@ -40,23 +40,13 @@ private struct PropertySortKey: Comparable {
         if lhs.wrapperSortKey != rhs.wrapperSortKey {
             return lhs.wrapperSortKey < rhs.wrapperSortKey
         }
-        return lhs.accessLevel < rhs.accessLevel
+        return lhs.accessLevel > rhs.accessLevel
     }
 }
 
-// MARK: - Access Level
-
-private enum AccessLevel: Int, Comparable {
-    case open = 0
-    case `public` = 1
-    case package = 2
-    case `internal` = 3
-    case `fileprivate` = 4
-    case `private` = 5
-
-    static func < (lhs: AccessLevel, rhs: AccessLevel) -> Bool {
-        lhs.rawValue < rhs.rawValue
-    }
+private struct StoredProperty {
+    let index: Int
+    let key: PropertySortKey
 }
 
 // MARK: - Visitor
@@ -100,16 +90,22 @@ private final class PropertyDeclarationOrderingVisitor: SyntaxVisitor {
 
     private func checkMemberBlock(_ memberBlock: MemberBlockSyntax, reportOn typeNode: Syntax) {
         let members = Array(memberBlock.members)
-        let (storedIndices, computedIndices) = classifyProperties(members)
+        let properties = classifyProperties(members)
 
-        guard hasViolation(members: members, stored: storedIndices, computed: computedIndices) else {
+        guard hasViolation(
+            stored: properties.stored,
+            computed: properties.computed,
+            bodyPosition: properties.bodyPosition,
+        ) else {
             return
         }
 
         let sorted = buildSortedMembersWithStoredFirst(
             members: members,
-            storedIndices: storedIndices,
-            computedIndices: computedIndices,
+            stored: properties.stored,
+            computedIndices: properties.computed,
+            propertyIndices: properties.indices,
+            bodyPosition: properties.bodyPosition,
         )
         let newBlock = memberBlock.with(\.members, MemberBlockItemListSyntax(sorted))
 
@@ -127,21 +123,29 @@ private final class PropertyDeclarationOrderingVisitor: SyntaxVisitor {
         )
     }
 
-    /// Classifies member declarations into stored and computed property index lists.
+    /// Extracts property metadata once for both detection and the fix.
     private func classifyProperties(
         _ members: [MemberBlockItemSyntax],
-    ) -> (stored: [Int], computed: [Int]) {
-        var stored: [Int] = []
+    ) -> (stored: [StoredProperty], computed: [Int], indices: [Int], bodyPosition: Int?) {
+        var stored: [StoredProperty] = []
         var computed: [Int] = []
+        var indices: [Int] = []
+        var bodyPosition: Int?
         for index in members.indices {
             guard let varDecl = members[index].decl.as(VariableDeclSyntax.self) else { continue }
+            indices.append(index)
             if isComputedProperty(varDecl) {
+                if bodyPosition == nil, isBodyProperty(varDecl) { bodyPosition = computed.count }
                 computed.append(index)
             } else {
-                stored.append(index)
+                let key = PropertySortKey(
+                    wrapperName: wrapperName(of: varDecl),
+                    accessLevel: DeclarationAccessLevel(modifiers: varDecl.modifiers) ?? .internal,
+                )
+                stored.append(StoredProperty(index: index, key: key))
             }
         }
-        return (stored, computed)
+        return (stored, computed, indices, bodyPosition)
     }
 
     /// Returns `true` when any ordering violation is detected:
@@ -149,87 +153,48 @@ private final class PropertyDeclarationOrderingVisitor: SyntaxVisitor {
     /// - stored and computed properties interleaved
     /// - `var body` not first among computed properties
     private func hasViolation(
-        members: [MemberBlockItemSyntax],
-        stored: [Int],
+        stored: [StoredProperty],
         computed: [Int],
+        bodyPosition: Int?,
     ) -> Bool {
         let hasEnough = stored.count >= 2
             || (!stored.isEmpty && !computed.isEmpty)
             || computed.count >= 2
         guard hasEnough else { return false }
 
-        if stored.count >= 2 {
-            let keys = stored.map { propertySortKey(of: members[$0].decl) }
-            if !isGrouped(keys) { return true }
-        }
+        if !isGrouped(stored) { return true }
         if hasStoredComputedMixing(stored: stored, computed: computed) { return true }
-        return hasBodyOrderViolation(members: members, computedIndices: computed)
+        return bodyPosition.map { $0 != 0 } ?? false
     }
 
-    private func hasStoredComputedMixing(stored: [Int], computed: [Int]) -> Bool {
-        let firstStored = stored.first ?? Int.max
-        let lastStored = stored.last ?? -1
+    private func hasStoredComputedMixing(stored: [StoredProperty], computed: [Int]) -> Bool {
+        let firstStored = stored.first?.index ?? Int.max
+        let lastStored = stored.last?.index ?? -1
         let lastComputed = computed.last ?? -1
-        let storedAfterComputed = stored.contains { $0 > lastComputed && lastComputed >= 0 }
+        let storedAfterComputed = lastStored > lastComputed && lastComputed >= 0
         let computedBetweenStored = computed.contains { $0 > firstStored && $0 < lastStored }
         return storedAfterComputed || computedBetweenStored
     }
 
-    private func hasBodyOrderViolation(
-        members: [MemberBlockItemSyntax],
-        computedIndices: [Int],
-    ) -> Bool {
-        guard computedIndices.count >= 2 else { return false }
-        guard let bodyIndex = computedIndices.first(where: { isBodyProperty(members[$0].decl) })
-        else { return false }
-        return bodyIndex != computedIndices.first
-    }
-
     /// Returns `true` when all equal-key elements are contiguous (no interleaving).
-    /// Two-step check: wrapper names must already be contiguous, and within each
-    /// wrapper run the access levels must also be contiguous (no interleaving).
-    private func isGrouped(_ keys: [PropertySortKey]) -> Bool {
-        guard keys.count >= 2 else { return true }
-        if !isFieldGrouped(keys.map(\.wrapperName)) { return false }
-        return accessLevelRunsAreGrouped(keys)
-    }
-
-    /// For each maximal run of identical wrapper names in `keys`, verifies that
-    /// the access levels within that run are themselves contiguous.
-    private func accessLevelRunsAreGrouped(_ keys: [PropertySortKey]) -> Bool {
-        for run in wrapperRuns(in: keys) where !isFieldGrouped(run) {
-            return false
-        }
-        return true
-    }
-
-    /// Splits `keys` into maximal consecutive runs where `wrapperName` is the
-    /// same, returning each run as the array of access levels in that run.
-    private func wrapperRuns(in keys: [PropertySortKey]) -> [[AccessLevel]] {
-        var runs: [[AccessLevel]] = []
-        var currentWrapper = keys[0].wrapperName
-        var currentLevels: [AccessLevel] = [keys[0].accessLevel]
-        for idx in 1 ..< keys.count {
-            if keys[idx].wrapperName == currentWrapper {
-                currentLevels.append(keys[idx].accessLevel)
-            } else {
-                runs.append(currentLevels)
-                currentWrapper = keys[idx].wrapperName
-                currentLevels = [keys[idx].accessLevel]
+    /// Checks wrapper runs and access-level runs together without intermediate arrays.
+    private func isGrouped(_ stored: [StoredProperty]) -> Bool {
+        var seenWrappers: Set<String> = []
+        var seenLevels: Set<DeclarationAccessLevel> = []
+        var currentWrapper: String?
+        var currentLevel: DeclarationAccessLevel?
+        for property in stored {
+            let key = property.key
+            if key.wrapperName != currentWrapper {
+                guard seenWrappers.insert(key.wrapperName).inserted else { return false }
+                currentWrapper = key.wrapperName
+                currentLevel = nil
+                seenLevels.removeAll(keepingCapacity: true)
             }
-        }
-        runs.append(currentLevels)
-        return runs
-    }
-
-    private func isFieldGrouped<T: Hashable>(_ values: [T]) -> Bool {
-        guard values.count >= 2 else { return true }
-        var seen = Set<T>()
-        var current: T?
-        for value in values where value != current {
-            if seen.contains(value) { return false }
-            seen.insert(value)
-            current = value
+            if key.accessLevel != currentLevel {
+                guard seenLevels.insert(key.accessLevel).inserted else { return false }
+                currentLevel = key.accessLevel
+            }
         }
         return true
     }
@@ -238,33 +203,32 @@ private final class PropertyDeclarationOrderingVisitor: SyntaxVisitor {
     /// (with `var body` leading), non-property members stay in their original slots.
     private func buildSortedMembersWithStoredFirst(
         members: [MemberBlockItemSyntax],
-        storedIndices: [Int],
+        stored: [StoredProperty],
         computedIndices: [Int],
+        propertyIndices: [Int],
+        bodyPosition: Int?,
     ) -> [MemberBlockItemSyntax] {
-        let sortedStored = storedIndices
-            .map { (index: $0, member: members[$0], key: propertySortKey(of: members[$0].decl)) }
+        let sortedStored = stored
             .sorted { $0.key < $1.key }
-            .map(\.member)
+            .map { members[$0.index] }
 
-        let computedMembers = sortComputedBodyFirst(members: members, computedIndices: computedIndices)
+        var computedOrder = computedIndices
+        if let bodyPosition, bodyPosition != 0 {
+            let bodyIndex = computedOrder.remove(at: bodyPosition)
+            computedOrder.insert(bodyIndex, at: 0)
+        }
 
-        let allPropertyIndices = (storedIndices + computedIndices).sorted()
-        let reordered = sortedStored + computedMembers
+        let reordered = sortedStored + computedOrder.map { members[$0] }
 
         var result = members
-        for (idx, originalIndex) in allPropertyIndices.enumerated() {
+        for (idx, originalIndex) in propertyIndices.enumerated() {
             result[originalIndex] = reordered[idx]
         }
         return result
     }
 
-    private func propertySortKey(of decl: DeclSyntax) -> PropertySortKey {
-        PropertySortKey(wrapperName: wrapperName(of: decl), accessLevel: accessLevel(of: decl))
-    }
-
     /// Returns the first property wrapper name, or empty string if none.
-    private func wrapperName(of decl: DeclSyntax) -> String {
-        guard let varDecl = decl.as(VariableDeclSyntax.self) else { return "" }
+    private func wrapperName(of varDecl: VariableDeclSyntax) -> String {
         for attribute in varDecl.attributes {
             if let attr = attribute.as(AttributeSyntax.self),
                let identType = attr.attributeName.as(IdentifierTypeSyntax.self)
@@ -280,39 +244,7 @@ private final class PropertyDeclarationOrderingVisitor: SyntaxVisitor {
         varDecl.bindings.contains { $0.accessorBlock != nil }
     }
 
-    private func isBodyProperty(_ decl: DeclSyntax) -> Bool {
-        guard let varDecl = decl.as(VariableDeclSyntax.self) else { return false }
+    private func isBodyProperty(_ varDecl: VariableDeclSyntax) -> Bool {
         return varDecl.bindings.contains { $0.pattern.trimmedDescription == "body" }
-    }
-
-    /// Places `var body` first; preserves relative order of remaining computed properties.
-    private func sortComputedBodyFirst(
-        members: [MemberBlockItemSyntax],
-        computedIndices: [Int],
-    ) -> [MemberBlockItemSyntax] {
-        guard let bodyIdx = computedIndices.first(where: { isBodyProperty(members[$0].decl) })
-        else {
-            return computedIndices.map { members[$0] }
-        }
-        let bodyMember = members[bodyIdx]
-        let rest = computedIndices.filter { $0 != bodyIdx }.map { members[$0] }
-        return [bodyMember] + rest
-    }
-
-    /// Returns the access level of a property declaration; defaults to `internal` when unspecified.
-    private func accessLevel(of decl: DeclSyntax) -> AccessLevel {
-        guard let varDecl = decl.as(VariableDeclSyntax.self) else { return .internal }
-        for modifier in varDecl.modifiers {
-            switch modifier.name.tokenKind {
-            case .keyword(.open): return .open
-            case .keyword(.public): return .public
-            case .keyword(.package): return .package
-            case .keyword(.internal): return .internal
-            case .keyword(.fileprivate): return .fileprivate
-            case .keyword(.private): return .private
-            default: continue
-            }
-        }
-        return .internal
     }
 }

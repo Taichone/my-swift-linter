@@ -15,6 +15,16 @@ rules:
     args:
       severity: error
 
+  # Require ordinary and documentation comments to be written in English.
+  english-comments:
+    args:
+      severity: error
+
+  # Require one blank line before methods and documented properties.
+  declaration-spacing:
+    args:
+      severity: error
+
   # 各ルールは ParameterizedRule。args で severity や閾値を上書きできる（既定値は
   # Sources/Rules/*Rule.swift を参照）。使わないルールはここで severity を下げるか、
   # そのプロジェクトの規約に合わせて調整する。
