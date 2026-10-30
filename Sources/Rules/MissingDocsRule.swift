@@ -8,7 +8,8 @@ import SwiftSyntax
 /// All fields are optional; omitting a field is a wildcard (matches anything).
 /// - `kinds`: OR match — declaration must be one of the listed kinds.
 /// - `modifiers`: AND match — declaration must have ALL listed modifiers.
-/// - `names`: OR match — declaration name must be one of the listed names.
+/// - `names` / `name_pattern`: OR match — an exact name or regular expression must match.
+///   Invalid regular expressions never match, so they cannot hide unexpected violations.
 struct IgnorePattern: Codable {
     /// Declaration kind: "var", "let", "func", "init", "subscript",
     /// "struct", "class", "actor", "enum", "protocol", "typealias"
@@ -17,14 +18,25 @@ struct IgnorePattern: Codable {
     var modifiers: [String]?
     /// Declaration names to match (exact), e.g. ["liveValue", "previewValue"].
     var names: [String]?
+    /// Optional regular expression matched anywhere in the declaration name.
+    var namePattern: String?
+
+    enum CodingKeys: String, CodingKey {
+        case kinds, modifiers, names
+        case namePattern = "name_pattern"
+    }
 
     func matches(kind: String, modifiers: Set<String>, name: String) -> Bool {
         if let kinds, !kinds.contains(kind) { return false }
         if let requiredModifiers = self.modifiers, !requiredModifiers.allSatisfy({ modifiers.contains($0) }) {
             return false
         }
-        if let names, !names.contains(name) { return false }
-        return true
+        guard names != nil || namePattern != nil else { return true }
+        if names?.contains(name) == true { return true }
+        if let namePattern, let expression = try? Regex(namePattern), name.contains(expression) {
+            return true
+        }
+        return false
     }
 }
 

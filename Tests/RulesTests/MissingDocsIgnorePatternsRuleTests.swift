@@ -105,4 +105,56 @@ struct MissingDocsIgnorePatternsRuleTests {
         let diagnostics = rule.lint(source: source, argsYAML: argsYAML)
         #expect(!diagnostics.isEmpty)
     }
+
+    @Test("name_pattern matches declaration names using regular expressions")
+    func regularExpressionNamePattern() {
+        let argsYAML = """
+        ignore_patterns:
+          - kinds: [struct]
+            name_pattern: "Reducer$"
+        """
+        let matching = rule.lint(source: "public struct HomeReducer {}", argsYAML: argsYAML)
+        let nonmatching = rule.lint(source: "public struct ReducerFactory {}", argsYAML: argsYAML)
+        let wrongKind = rule.lint(source: "public func makeReducer() {}", argsYAML: argsYAML)
+        #expect(matching.isEmpty)
+        #expect(nonmatching.count == 1)
+        #expect(wrongKind.count == 1)
+    }
+
+    @Test("exact names and name_pattern are alternatives subject to kind and modifier filters")
+    func exactAndRegularExpressionNames() {
+        let argsYAML = """
+        ignore_patterns:
+          - kinds: [var]
+            modifiers: [static]
+            names: [shared]
+            name_pattern: "^preview"
+        """
+        let source = """
+        public static var shared: Int = 0
+        public static var previewValue: Int = 0
+        public static var other: Int = 0
+        public var previewInstance: Int = 0
+        public static func previewFunction() {}
+        """
+        let diagnostics = rule.lint(source: source, argsYAML: argsYAML)
+        #expect(diagnostics.count == 3)
+    }
+
+    @Test("invalid name_pattern never suppresses unrelated declarations")
+    func invalidRegularExpressionFailsSafe() {
+        let argsYAML = """
+        ignore_patterns:
+          - names: [shared]
+            name_pattern: "["
+        """
+        let matchingName = rule.lint(source: "public var shared: Int = 0", argsYAML: argsYAML)
+        let otherName = rule.lint(source: "public var other: Int = 0", argsYAML: argsYAML)
+        #expect(matchingName.isEmpty)
+        #expect(otherName.count == 1)
+
+        let patternOnly = "ignore_patterns:\n  - name_pattern: '['\n"
+        let invalidOnly = rule.lint(source: "public var shared: Int = 0", argsYAML: patternOnly)
+        #expect(invalidOnly.count == 1)
+    }
 }
