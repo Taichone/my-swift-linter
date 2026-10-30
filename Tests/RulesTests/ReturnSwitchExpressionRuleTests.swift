@@ -24,7 +24,7 @@ struct ReturnSwitchExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -43,7 +43,7 @@ struct ReturnSwitchExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -59,7 +59,7 @@ struct ReturnSwitchExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -77,7 +77,7 @@ struct ReturnSwitchExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -93,7 +93,7 @@ struct ReturnSwitchExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -111,7 +111,7 @@ struct ReturnSwitchExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -130,7 +130,7 @@ struct ReturnSwitchExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -146,7 +146,7 @@ struct ReturnSwitchExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -162,7 +162,7 @@ struct ReturnSwitchExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -178,7 +178,7 @@ struct ReturnSwitchExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -196,7 +196,7 @@ struct ReturnSwitchExpressionRuleTests {
             }
         }
         """
-        let (diagnostics, fixed) = await rule.lintAndFix(source: source)
+        let (diagnostics, fixed) = rule.lintAndFix(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].isFixable)
         let fixedSource = try #require(fixed)
@@ -221,7 +221,7 @@ struct ReturnSwitchExpressionRuleTests {
             }
         }
         """
-        let (diagnostics, fixed) = await rule.lintAndFix(source: source)
+        let (diagnostics, fixed) = rule.lintAndFix(source: source)
         #expect(diagnostics.count == 1)
         let fixedSource = try #require(fixed)
         #expect(fixedSource.contains("return switch status"))
@@ -253,7 +253,7 @@ struct ReturnSwitchExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 2)
     }
 }

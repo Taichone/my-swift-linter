@@ -118,7 +118,7 @@ struct PropertyDeclarationOrderingFixTests {
         #expect(diag1.count == 1)
         #expect(fixed1 != nil)
         if let fixed = fixed1 {
-            let diag2 = await rule.lint(source: fixed)
+            let diag2 = rule.lint(source: fixed)
             #expect(diag2.isEmpty, "Fix should converge in one pass")
         }
     }
@@ -137,7 +137,7 @@ struct PropertyDeclarationOrderingFixTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -150,7 +150,7 @@ struct PropertyDeclarationOrderingFixTests {
             @State var b: Int
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -191,7 +191,7 @@ struct PropertyDeclarationOrderingFixTests {
             var body: some View { Text("hello") }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -218,7 +218,7 @@ struct PropertyDeclarationOrderingFixTests {
 
     @Test("empty file produces no diagnostics")
     func emptyFile() async {
-        let diagnostics = await rule.lint(source: "")
+        let diagnostics = rule.lint(source: "")
         #expect(diagnostics.isEmpty)
     }
 
@@ -231,7 +231,7 @@ struct PropertyDeclarationOrderingFixTests {
             @State var c: Int
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         let msg = diagnostics[0].message
         #expect(msg.contains("wrapper"))

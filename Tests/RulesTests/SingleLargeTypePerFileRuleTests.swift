@@ -41,7 +41,7 @@ struct SingleLargeTypePerFileRuleTests {
     @Test("error when two public types each >= 50 lines")
     func twoLargePublicTypes() async {
         let source = publicStruct(name: "Foo", lines: 50) + "\n" + publicStruct(name: "Bar", lines: 50)
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 2)
         #expect(diagnostics.allSatisfy { $0.severity == .error })
     }
@@ -49,7 +49,7 @@ struct SingleLargeTypePerFileRuleTests {
     @Test("error when two public types each >= 100 lines")
     func twoLargePublicTypesError() async {
         let source = publicStruct(name: "Foo", lines: 100) + "\n" + publicStruct(name: "Bar", lines: 100)
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 2)
         #expect(diagnostics.allSatisfy { $0.severity == .error })
     }
@@ -57,7 +57,7 @@ struct SingleLargeTypePerFileRuleTests {
     @Test("error when two package types each >= 50 lines")
     func twoLargePackageTypes() async {
         let source = packageStruct(name: "Foo", lines: 50) + "\n" + packageStruct(name: "Bar", lines: 50)
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 2)
         #expect(diagnostics.allSatisfy { $0.severity == .error })
     }
@@ -65,7 +65,7 @@ struct SingleLargeTypePerFileRuleTests {
     @Test("error when mixed public and package large types")
     func mixedPublicPackage() async {
         let source = publicStruct(name: "Foo", lines: 50) + "\n" + packageStruct(name: "Bar", lines: 50)
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 2)
     }
 
@@ -73,28 +73,28 @@ struct SingleLargeTypePerFileRuleTests {
 
     @Test("no error when only one large public type")
     func singleLargeType() async {
-        let diagnostics = await rule.lint(source: publicStruct(name: "Foo", lines: 60))
+        let diagnostics = rule.lint(source: publicStruct(name: "Foo", lines: 60))
         #expect(diagnostics.isEmpty)
     }
 
     @Test("no error when two public types but both under 50 lines")
     func twoSmallPublicTypes() async {
         let source = publicStruct(name: "Foo", lines: 10) + "\n" + publicStruct(name: "Bar", lines: 10)
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
     @Test("no error when one is large and one is small")
     func oneLargeOneSmall() async {
         let source = publicStruct(name: "Foo", lines: 60) + "\n" + publicStruct(name: "Bar", lines: 10)
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
     @Test("no error for internal types even if large")
     func twoLargeInternalTypes() async {
         let source = internalStruct(name: "Foo", lines: 60) + "\n" + internalStruct(name: "Bar", lines: 60)
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -106,7 +106,7 @@ struct SingleLargeTypePerFileRuleTests {
             source += "    let outerProp\(i) = \(i)\n"
         }
         source += "}"
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -150,7 +150,7 @@ struct SingleLargeTypePerFileRuleTests {
             return result + "}"
         }
         let source = largeType(name: "TypeA") + "\n" + largeType(name: "TypeB")
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 2, "Expected violation for \(kind) types")
     }
 
@@ -159,14 +159,14 @@ struct SingleLargeTypePerFileRuleTests {
     @Test("no violation at 49 lines (below warning threshold)")
     func belowWarningThreshold() async {
         let source = publicStruct(name: "Foo", lines: 49) + "\n" + publicStruct(name: "Bar", lines: 49)
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
     @Test("error at exactly 50 lines")
     func atWarningThreshold() async {
         let source = publicStruct(name: "Foo", lines: 50) + "\n" + publicStruct(name: "Bar", lines: 50)
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 2)
         #expect(diagnostics.allSatisfy { $0.severity == .error })
     }
@@ -174,7 +174,7 @@ struct SingleLargeTypePerFileRuleTests {
     @Test("error at exactly 100 lines (at error threshold)")
     func atErrorThreshold() async {
         let source = publicStruct(name: "Foo", lines: 100) + "\n" + publicStruct(name: "Bar", lines: 100)
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 2)
         #expect(diagnostics.allSatisfy { $0.severity == .error })
     }
@@ -184,7 +184,7 @@ struct SingleLargeTypePerFileRuleTests {
     @Test("YAML warning threshold lowers to 15 — 20-line types produce warning")
     func yamlWarningOverride() async {
         let source = publicStruct(name: "Foo", lines: 20) + "\n" + publicStruct(name: "Bar", lines: 20)
-        let diagnostics = await rule.lint(source: source, argsYAML: "warning_lines: 15\nerror_lines: 50\n")
+        let diagnostics = rule.lint(source: source, argsYAML: "warning_lines: 15\nerror_lines: 50\n")
         #expect(diagnostics.count == 2)
         #expect(diagnostics.allSatisfy { $0.severity == .warning })
     }
@@ -192,7 +192,7 @@ struct SingleLargeTypePerFileRuleTests {
     @Test("YAML error threshold lowers to 15 — 20-line types produce error")
     func yamlErrorOverride() async {
         let source = publicStruct(name: "Foo", lines: 20) + "\n" + publicStruct(name: "Bar", lines: 20)
-        let diagnostics = await rule.lint(source: source, argsYAML: "warning_lines: 10\nerror_lines: 15\n")
+        let diagnostics = rule.lint(source: source, argsYAML: "warning_lines: 10\nerror_lines: 15\n")
         #expect(diagnostics.count == 2)
         #expect(diagnostics.allSatisfy { $0.severity == .error })
     }
@@ -201,14 +201,14 @@ struct SingleLargeTypePerFileRuleTests {
 
     @Test("empty file produces no diagnostics")
     func emptyFile() async {
-        let diagnostics = await rule.lint(source: "")
+        let diagnostics = rule.lint(source: "")
         #expect(diagnostics.isEmpty)
     }
 
     @Test("message includes type name")
     func messageContent() async {
         let source = publicStruct(name: "Foo", lines: 50) + "\n" + publicStruct(name: "Bar", lines: 50)
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         let messages = diagnostics.map(\.message)
         #expect(messages.contains { $0.contains("Foo") })
         #expect(messages.contains { $0.contains("Bar") })

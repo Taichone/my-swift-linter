@@ -27,7 +27,7 @@ struct BranchAssignmentToTupleRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -49,7 +49,7 @@ struct BranchAssignmentToTupleRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -69,7 +69,7 @@ struct BranchAssignmentToTupleRuleTests {
             return (a, b)
         }()
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -92,7 +92,7 @@ struct BranchAssignmentToTupleRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -110,7 +110,7 @@ struct BranchAssignmentToTupleRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -126,7 +126,7 @@ struct BranchAssignmentToTupleRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -143,7 +143,7 @@ struct BranchAssignmentToTupleRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -163,7 +163,7 @@ struct BranchAssignmentToTupleRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -182,7 +182,7 @@ struct BranchAssignmentToTupleRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -200,7 +200,7 @@ struct BranchAssignmentToTupleRuleTests {
             _ = pages
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -222,7 +222,7 @@ struct BranchAssignmentToTupleRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -241,7 +241,7 @@ struct BranchAssignmentToTupleRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -254,7 +254,7 @@ struct BranchAssignmentToTupleRuleTests {
             print(y)
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 }

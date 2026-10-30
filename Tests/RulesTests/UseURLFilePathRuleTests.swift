@@ -17,7 +17,7 @@ struct UseURLFilePathRuleTests {
         let source = """
         let url = URL(fileURLWithPath: "/tmp/file.txt")
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -27,7 +27,7 @@ struct UseURLFilePathRuleTests {
         let source = """
         let url = URL(fileURLWithPath: "/tmp/dir", isDirectory: true)
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -37,7 +37,7 @@ struct UseURLFilePathRuleTests {
         let source = """
         let url = URL.init(fileURLWithPath: "/tmp/file.txt")
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -46,7 +46,7 @@ struct UseURLFilePathRuleTests {
         let source = """
         let hoge: URL = .init(fileURLWithPath: "/tmp/file.txt")
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -56,7 +56,7 @@ struct UseURLFilePathRuleTests {
         let a = URL(fileURLWithPath: "/tmp/a.txt")
         let b = URL(fileURLWithPath: "/tmp/b.txt")
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 2)
     }
 
@@ -67,7 +67,7 @@ struct UseURLFilePathRuleTests {
         let source = """
         let url = URL(fileURLWithPath: "/tmp/file.txt")
         """
-        let (diagnostics, fixedSource) = await rule.lintAndFix(source: source)
+        let (diagnostics, fixedSource) = rule.lintAndFix(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].isFixable)
         #expect(fixedSource?.contains("URL(filePath:") == true)
@@ -79,7 +79,7 @@ struct UseURLFilePathRuleTests {
         let source = """
         let url = URL(fileURLWithPath: "/tmp/dir", isDirectory: true)
         """
-        let (diagnostics, fixedSource) = await rule.lintAndFix(source: source)
+        let (diagnostics, fixedSource) = rule.lintAndFix(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].isFixable)
         #expect(fixedSource?.contains("filePath:") == true)
@@ -122,7 +122,7 @@ struct UseURLFilePathRuleTests {
         let source = """
         let url = URL(filePath: "/tmp/file.txt")
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -131,7 +131,7 @@ struct UseURLFilePathRuleTests {
         let source = """
         let url = URL(filePath: "/tmp/dir", directoryHint: .isDirectory)
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -140,7 +140,7 @@ struct UseURLFilePathRuleTests {
         let source = """
         let url = URL(string: "https://example.com")
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -149,7 +149,7 @@ struct UseURLFilePathRuleTests {
         let source = """
         let x = SomeOtherType(fileURLWithPath: "/tmp")
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 }

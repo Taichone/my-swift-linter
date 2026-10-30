@@ -23,7 +23,7 @@ struct DeepNestingRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -43,7 +43,7 @@ struct DeepNestingRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -60,7 +60,7 @@ struct DeepNestingRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 2)
         #expect(diagnostics.allSatisfy { $0.severity == .error })
     }
@@ -76,7 +76,7 @@ struct DeepNestingRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -89,7 +89,7 @@ struct DeepNestingRuleTests {
             if true { let _ = 0 }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -103,7 +103,7 @@ struct DeepNestingRuleTests {
             if true { if true { let _ = 0 } }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -120,7 +120,7 @@ struct DeepNestingRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -139,7 +139,7 @@ struct DeepNestingRuleTests {
             if true { for _ in [1] { \(statement) } }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(!diagnostics.isEmpty, "Expected violation for: \(statement)")
     }
 
@@ -154,7 +154,7 @@ struct DeepNestingRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source, argsYAML: "warning_depth: 2\nerror_depth: 4\n")
+        let diagnostics = rule.lint(source: source, argsYAML: "warning_depth: 2\nerror_depth: 4\n")
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .warning)
     }
@@ -170,7 +170,7 @@ struct DeepNestingRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source, argsYAML: "warning_depth: 2\nerror_depth: 3\n")
+        let diagnostics = rule.lint(source: source, argsYAML: "warning_depth: 2\nerror_depth: 3\n")
         #expect(diagnostics.count == 2)
         #expect(diagnostics.contains { $0.severity == .error })
     }
@@ -186,7 +186,7 @@ struct DeepNestingRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source, argsYAML: "warning_depth: 10\nerror_depth: 15\n")
+        let diagnostics = rule.lint(source: source, argsYAML: "warning_depth: 10\nerror_depth: 15\n")
         #expect(diagnostics.isEmpty)
     }
 
@@ -194,7 +194,7 @@ struct DeepNestingRuleTests {
 
     @Test("empty file produces no diagnostics")
     func emptyFile() async {
-        let diagnostics = await rule.lint(source: "")
+        let diagnostics = rule.lint(source: "")
         #expect(diagnostics.isEmpty)
     }
 
@@ -209,7 +209,7 @@ struct DeepNestingRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].message.contains("3"))
     }

@@ -27,7 +27,7 @@ struct MissingDocsIgnorePatternsRuleTests {
             "public static var testValue: Int = 0",
         ]
         for source in sources {
-            let diagnostics = await rule.lint(source: source, argsYAML: argsYAML)
+            let diagnostics = rule.lint(source: source, argsYAML: argsYAML)
             #expect(diagnostics.isEmpty, "Expected no violation for: \(source)")
         }
     }
@@ -44,7 +44,7 @@ struct MissingDocsIgnorePatternsRuleTests {
             modifiers: [static]
             names: [liveValue]
         """
-        let diagnostics = await rule.lint(source: source, argsYAML: argsYAML)
+        let diagnostics = rule.lint(source: source, argsYAML: argsYAML)
         #expect(!diagnostics.isEmpty)
     }
 
@@ -59,7 +59,7 @@ struct MissingDocsIgnorePatternsRuleTests {
             modifiers: [static]
             names: [liveValue]
         """
-        let diagnostics = await rule.lint(source: source, argsYAML: argsYAML)
+        let diagnostics = rule.lint(source: source, argsYAML: argsYAML)
         #expect(!diagnostics.isEmpty)
     }
 
@@ -74,7 +74,7 @@ struct MissingDocsIgnorePatternsRuleTests {
             modifiers: [static]
             names: [liveValue]
         """
-        let diagnostics = await rule.lint(source: source, argsYAML: argsYAML)
+        let diagnostics = rule.lint(source: source, argsYAML: argsYAML)
         #expect(!diagnostics.isEmpty)
     }
 
@@ -84,7 +84,7 @@ struct MissingDocsIgnorePatternsRuleTests {
     func ignorePatternNamesOnly() async {
         let source = "public func liveValue() {}"
         let argsYAML = "ignore_patterns:\n  - names: [liveValue]\n"
-        let diagnostics = await rule.lint(source: source, argsYAML: argsYAML)
+        let diagnostics = rule.lint(source: source, argsYAML: argsYAML)
         #expect(diagnostics.isEmpty)
     }
 
@@ -92,7 +92,7 @@ struct MissingDocsIgnorePatternsRuleTests {
     func ignorePatternKindsOnly() async {
         let source = "public var anything: Int = 0"
         let argsYAML = "ignore_patterns:\n  - kinds: [var]\n"
-        let diagnostics = await rule.lint(source: source, argsYAML: argsYAML)
+        let diagnostics = rule.lint(source: source, argsYAML: argsYAML)
         #expect(diagnostics.isEmpty)
     }
 
@@ -102,7 +102,7 @@ struct MissingDocsIgnorePatternsRuleTests {
     func emptyIgnorePatterns() async {
         let source = "public func foo() {}"
         let argsYAML = "ignore_patterns: []\n"
-        let diagnostics = await rule.lint(source: source, argsYAML: argsYAML)
+        let diagnostics = rule.lint(source: source, argsYAML: argsYAML)
         #expect(!diagnostics.isEmpty)
     }
 }

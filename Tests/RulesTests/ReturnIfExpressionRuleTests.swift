@@ -23,7 +23,7 @@ struct ReturnIfExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -41,7 +41,7 @@ struct ReturnIfExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -60,7 +60,7 @@ struct ReturnIfExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -77,7 +77,7 @@ struct ReturnIfExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -98,7 +98,7 @@ struct ReturnIfExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -113,7 +113,7 @@ struct ReturnIfExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -129,7 +129,7 @@ struct ReturnIfExpressionRuleTests {
             return "no"
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -144,7 +144,7 @@ struct ReturnIfExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -160,7 +160,7 @@ struct ReturnIfExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -171,7 +171,7 @@ struct ReturnIfExpressionRuleTests {
             return if x { "yes" } else { "no" }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -187,7 +187,7 @@ struct ReturnIfExpressionRuleTests {
             return "zero"
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -203,7 +203,7 @@ struct ReturnIfExpressionRuleTests {
             return 1
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -220,7 +220,7 @@ struct ReturnIfExpressionRuleTests {
             }
         }
         """
-        let (diagnostics, fixed) = await rule.lintAndFix(source: source)
+        let (diagnostics, fixed) = rule.lintAndFix(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].isFixable)
         let fixedSource = try #require(fixed)
@@ -244,7 +244,7 @@ struct ReturnIfExpressionRuleTests {
             }
         }
         """
-        let (diagnostics, fixed) = await rule.lintAndFix(source: source)
+        let (diagnostics, fixed) = rule.lintAndFix(source: source)
         #expect(diagnostics.count == 1)
         let fixedSource = try #require(fixed)
         #expect(fixedSource.contains("return if n < 0"))
@@ -266,7 +266,7 @@ struct ReturnIfExpressionRuleTests {
             }
         }
         """
-        let (diagnostics, fixed) = await rule.lintAndFix(source: source)
+        let (diagnostics, fixed) = rule.lintAndFix(source: source)
         #expect(diagnostics.count == 1)
         let fixedSource = try #require(fixed)
         #expect(fixedSource.contains("return if"))
@@ -277,13 +277,13 @@ struct ReturnIfExpressionRuleTests {
 
     @Test("empty file produces no diagnostics")
     func emptyFile() async {
-        let diagnostics = await rule.lint(source: "")
+        let diagnostics = rule.lint(source: "")
         #expect(diagnostics.isEmpty)
     }
 
     @Test("single-line file with no if produces no diagnostics")
     func singleLine() async {
-        let diagnostics = await rule.lint(source: "let x = 1\n")
+        let diagnostics = rule.lint(source: "let x = 1\n")
         #expect(diagnostics.isEmpty)
     }
 
@@ -305,7 +305,7 @@ struct ReturnIfExpressionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 2)
     }
 }

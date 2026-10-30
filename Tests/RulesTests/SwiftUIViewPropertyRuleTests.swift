@@ -56,7 +56,7 @@ struct SwiftUIViewPropertyRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -70,7 +70,7 @@ struct SwiftUIViewPropertyRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -87,7 +87,7 @@ struct SwiftUIViewPropertyRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -102,7 +102,7 @@ struct SwiftUIViewPropertyRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -120,7 +120,7 @@ struct SwiftUIViewPropertyRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -138,7 +138,7 @@ struct SwiftUIViewPropertyRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -155,7 +155,7 @@ struct SwiftUIViewPropertyRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -170,7 +170,7 @@ struct SwiftUIViewPropertyRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -189,7 +189,7 @@ struct SwiftUIViewPropertyRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -208,7 +208,7 @@ struct SwiftUIViewPropertyRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -223,7 +223,7 @@ struct SwiftUIViewPropertyRuleTests {
             var body: some View { Text(title) }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -241,7 +241,7 @@ struct SwiftUIViewPropertyRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -259,13 +259,13 @@ struct SwiftUIViewPropertyRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
     @Test("no error for empty file")
     func emptyFile() async {
-        let diagnostics = await rule.lint(source: "")
+        let diagnostics = rule.lint(source: "")
         #expect(diagnostics.isEmpty)
     }
 
@@ -281,7 +281,7 @@ struct SwiftUIViewPropertyRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -298,7 +298,7 @@ struct SwiftUIViewPropertyRuleTests {
             var body: some View { content(true) }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -313,7 +313,7 @@ struct SwiftUIViewPropertyRuleTests {
             var body: some View { content() }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -330,7 +330,7 @@ struct SwiftUIViewPropertyRuleTests {
             var body: some View { label() }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -349,7 +349,7 @@ struct SwiftUIViewPropertyRuleTests {
             var body: some View { content() }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -368,7 +368,7 @@ struct SwiftUIViewPropertyRuleTests {
             var body: some View { content() }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.contains { $0.severity == .error })
     }
 
@@ -384,7 +384,7 @@ struct SwiftUIViewPropertyRuleTests {
             var body: some View { content() }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -404,7 +404,7 @@ struct SwiftUIViewPropertyRuleTests {
             var body: some View { content() }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -424,7 +424,7 @@ struct SwiftUIViewPropertyRuleTests {
             var body: some View { content() }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -439,7 +439,7 @@ struct SwiftUIViewPropertyRuleTests {
             var body: some View { Text(title()) }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 }

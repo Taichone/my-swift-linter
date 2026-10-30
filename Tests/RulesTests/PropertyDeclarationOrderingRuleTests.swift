@@ -22,7 +22,7 @@ struct PropertyDeclarationOrderingRuleTests {
             private var d: Int
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -36,7 +36,7 @@ struct PropertyDeclarationOrderingRuleTests {
             private var c: Int
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -53,7 +53,7 @@ struct PropertyDeclarationOrderingRuleTests {
             var foobar: Int
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -67,7 +67,7 @@ struct PropertyDeclarationOrderingRuleTests {
             @Presents var c: Int?
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -83,7 +83,7 @@ struct PropertyDeclarationOrderingRuleTests {
             public var d: Int
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -101,7 +101,7 @@ struct PropertyDeclarationOrderingRuleTests {
             private var e: Int
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -114,7 +114,7 @@ struct PropertyDeclarationOrderingRuleTests {
             var c: Int
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -125,7 +125,7 @@ struct PropertyDeclarationOrderingRuleTests {
             var a: Int
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -136,7 +136,7 @@ struct PropertyDeclarationOrderingRuleTests {
             func doSomething() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -149,7 +149,7 @@ struct PropertyDeclarationOrderingRuleTests {
             var b: Int
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -162,7 +162,7 @@ struct PropertyDeclarationOrderingRuleTests {
             var c: Int
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -176,7 +176,7 @@ struct PropertyDeclarationOrderingRuleTests {
             private var d: Int
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -190,7 +190,7 @@ struct PropertyDeclarationOrderingRuleTests {
         "actor Foo {\n    public var a: Int\n    var b: Int\n    public var c: Int\n}",
     ])
     func allTypeKinds(source: String) async {
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(!diagnostics.isEmpty, "Expected violation")
     }
 }

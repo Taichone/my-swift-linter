@@ -21,7 +21,7 @@ struct TestFunctionNamingRuleTests {
             func `claudeHookOutput blocks when outOfSync`() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -35,7 +35,7 @@ struct TestFunctionNamingRuleTests {
             func `claudeHookOutput blocks when outOfSync`() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -46,7 +46,7 @@ struct TestFunctionNamingRuleTests {
         @Test
         func `something happens here`() {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -61,7 +61,7 @@ struct TestFunctionNamingRuleTests {
             func `second case`() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 2)
     }
 
@@ -76,7 +76,7 @@ struct TestFunctionNamingRuleTests {
             func claudeHookOutputBlocksWhenOutOfSync() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -89,7 +89,7 @@ struct TestFunctionNamingRuleTests {
             func claudeHookOutputBlocksWhenOutOfSync() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -100,7 +100,7 @@ struct TestFunctionNamingRuleTests {
             func `some helper`() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -113,7 +113,7 @@ struct TestFunctionNamingRuleTests {
             func `default`() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -124,7 +124,7 @@ struct TestFunctionNamingRuleTests {
             func computeValue() -> Int { 42 }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -132,7 +132,7 @@ struct TestFunctionNamingRuleTests {
 
     @Test("empty file produces no diagnostics")
     func emptyFile() async {
-        let diagnostics = await rule.lint(source: "")
+        let diagnostics = rule.lint(source: "")
         #expect(diagnostics.isEmpty)
     }
 
@@ -145,7 +145,7 @@ struct TestFunctionNamingRuleTests {
             func `does something important`() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 }

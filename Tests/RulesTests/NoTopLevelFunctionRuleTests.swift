@@ -19,7 +19,7 @@ struct NoTopLevelFunctionRuleTests {
             print("hello")
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics.first?.severity == .error)
     }
@@ -31,7 +31,7 @@ struct NoTopLevelFunctionRuleTests {
         func b() {}
         func c() {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 3)
     }
 
@@ -43,21 +43,21 @@ struct NoTopLevelFunctionRuleTests {
     ])
     func allAccessModifiers(modifier: String) async {
         let source = "\(modifier) func helper() {}"
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1, "\(modifier) func should be flagged")
     }
 
     @Test("flags top-level async / throws funcs")
     func asyncThrowsFunc() async {
         let source = "func helper() async throws -> Int { 0 }"
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
     @Test("flags top-level generic funcs")
     func genericFunc() async {
         let source = "func wrap<T>(_ value: T) -> T { value }"
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -70,7 +70,7 @@ struct NoTopLevelFunctionRuleTests {
             func helper() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -81,7 +81,7 @@ struct NoTopLevelFunctionRuleTests {
             func helper() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -92,7 +92,7 @@ struct NoTopLevelFunctionRuleTests {
             static func cacheKey() -> String { "" }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -106,7 +106,7 @@ struct NoTopLevelFunctionRuleTests {
             func helper() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty, "func inside \(keyword) should not be flagged")
     }
 
@@ -117,7 +117,7 @@ struct NoTopLevelFunctionRuleTests {
             func helper()
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -130,7 +130,7 @@ struct NoTopLevelFunctionRuleTests {
         enum Bar { case a }
         typealias Baz = Int
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -147,7 +147,7 @@ struct NoTopLevelFunctionRuleTests {
             }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -156,7 +156,7 @@ struct NoTopLevelFunctionRuleTests {
     @Test("message includes the function name")
     func messageMentionsFunctionName() async {
         let source = "func myUniqueHelper() {}"
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.first?.message.contains("myUniqueHelper") == true)
     }
 
@@ -164,7 +164,7 @@ struct NoTopLevelFunctionRuleTests {
 
     @Test("empty file produces no diagnostics")
     func emptyFile() async {
-        let diagnostics = await rule.lint(source: "")
+        let diagnostics = rule.lint(source: "")
         #expect(diagnostics.isEmpty)
     }
 }

@@ -22,7 +22,7 @@ struct FunctionAccessModifierGroupingRuleTests {
             private func d() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -36,7 +36,7 @@ struct FunctionAccessModifierGroupingRuleTests {
             private func c() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -48,7 +48,7 @@ struct FunctionAccessModifierGroupingRuleTests {
         "extension Foo {\n    public func a() {}\n    func b() {}\n    public func c() {}\n}",
     ])
     func allTypeKinds(source: String) async {
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(!diagnostics.isEmpty, "Expected violation")
     }
 
@@ -64,7 +64,7 @@ struct FunctionAccessModifierGroupingRuleTests {
             private func d() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -77,7 +77,7 @@ struct FunctionAccessModifierGroupingRuleTests {
             func c() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -88,7 +88,7 @@ struct FunctionAccessModifierGroupingRuleTests {
             func a() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -101,7 +101,7 @@ struct FunctionAccessModifierGroupingRuleTests {
             public func b() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -114,7 +114,7 @@ struct FunctionAccessModifierGroupingRuleTests {
             public func b() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -201,7 +201,7 @@ struct FunctionAccessModifierGroupingRuleTests {
         let (diag1, fixed1) = rule.lintAndFix(source: source)
         #expect(diag1.count == 1)
         if let fixed = fixed1 {
-            let diag2 = await rule.lint(source: fixed)
+            let diag2 = rule.lint(source: fixed)
             #expect(diag2.isEmpty, "Fix should converge in one pass")
         }
     }
@@ -210,7 +210,7 @@ struct FunctionAccessModifierGroupingRuleTests {
 
     @Test("empty file produces no diagnostics")
     func emptyFile() async {
-        let diagnostics = await rule.lint(source: "")
+        let diagnostics = rule.lint(source: "")
         #expect(diagnostics.isEmpty)
     }
 
@@ -223,7 +223,7 @@ struct FunctionAccessModifierGroupingRuleTests {
             public func c() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].message.contains("access modifier"))
     }

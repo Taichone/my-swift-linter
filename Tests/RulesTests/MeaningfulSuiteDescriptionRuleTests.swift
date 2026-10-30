@@ -19,7 +19,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("MyFeature")
         struct MyFeature {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -31,7 +31,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("CheckRunner")
         struct CheckRunnerTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -43,7 +43,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("Validator")
         struct ValidatorTest {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -55,7 +55,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("Parser")
         struct ParserSpec {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -67,7 +67,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("NetworkClient")
         class NetworkClientTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -79,7 +79,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("Cache")
         actor CacheTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -91,7 +91,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("Store")
         extension StoreTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -105,7 +105,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("CheckRunner")
         struct CheckRunnerTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 2)
     }
 
@@ -118,7 +118,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("UpdateRunner — recomputes checksums and writes them back")
         struct UpdateRunnerTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -130,7 +130,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("ConfigLoader – parses YAML")
         struct ConfigLoaderTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -142,7 +142,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("Parser - handles edge cases")
         struct ParserTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -154,7 +154,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("DocSyncConfig: Codable round-trip and decoding edge cases")
         struct DocSyncConfigTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].severity == .error)
     }
@@ -166,7 +166,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("CheckRunner — validates sequential execution order")
         struct CheckRunnerTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
 
@@ -179,7 +179,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("meaningful-suite-description: detects @Suite descriptions that duplicate the type name")
         struct MeaningfulSuiteDescriptionRuleTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -190,7 +190,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("URL parsing: handles percent-encoded paths and query strings")
         struct URLParserTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -201,7 +201,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite(.serialized)
         struct CheckRunnerTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -212,7 +212,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite
         struct CheckRunnerTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -221,7 +221,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         let source = """
         struct CheckRunnerTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -232,7 +232,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("Validates ordering of items in a sequential list")
         struct CheckRunnerTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -243,7 +243,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("Check")
         struct CheckRunnerTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -254,7 +254,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("checkrunner")
         struct CheckRunnerTests {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -262,7 +262,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
 
     @Test("empty file produces no diagnostics")
     func emptyFile() async {
-        let diagnostics = await rule.lint(source: "")
+        let diagnostics = rule.lint(source: "")
         #expect(diagnostics.isEmpty)
     }
 
@@ -274,7 +274,7 @@ struct MeaningfulSuiteDescriptionRuleTests {
         @Suite("Check\(name)")
         struct CheckRunnerTests {}
         """#
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 }

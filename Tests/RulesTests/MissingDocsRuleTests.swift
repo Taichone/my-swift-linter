@@ -24,7 +24,7 @@ struct MissingDocsRuleTests {
         "public typealias Foo = Int",
     ])
     func publicDeclWithoutDoc(declaration: String) async {
-        let diagnostics = await rule.lint(source: declaration)
+        let diagnostics = rule.lint(source: declaration)
         #expect(!diagnostics.isEmpty, "Expected violation for: \(declaration)")
         #expect(diagnostics[0].severity == .error)
     }
@@ -38,7 +38,7 @@ struct MissingDocsRuleTests {
             public init() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -49,19 +49,19 @@ struct MissingDocsRuleTests {
             public init() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(!diagnostics.isEmpty)
     }
 
     @Test("error when open func lacks doc comment")
     func openFuncWithoutDoc() async {
-        let diagnostics = await rule.lint(source: "open func foo() {}")
+        let diagnostics = rule.lint(source: "open func foo() {}")
         #expect(!diagnostics.isEmpty)
     }
 
     @Test("error when package func lacks doc comment")
     func packageFuncWithoutDoc() async {
-        let diagnostics = await rule.lint(source: "package func foo() {}")
+        let diagnostics = rule.lint(source: "package func foo() {}")
         #expect(!diagnostics.isEmpty)
     }
 
@@ -72,7 +72,7 @@ struct MissingDocsRuleTests {
             public subscript(index: Int) -> Int { index }
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(!diagnostics.isEmpty)
     }
 
@@ -84,7 +84,7 @@ struct MissingDocsRuleTests {
         /// Does something.
         public func foo() {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -94,7 +94,7 @@ struct MissingDocsRuleTests {
         /** Does something. */
         public func foo() {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -105,7 +105,7 @@ struct MissingDocsRuleTests {
         /// Second line.
         public func foo() {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -115,7 +115,7 @@ struct MissingDocsRuleTests {
         /// A documented struct.
         public struct Foo {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -123,25 +123,25 @@ struct MissingDocsRuleTests {
 
     @Test("no error for internal func with default min_access_level package")
     func internalFuncBelowThreshold() async {
-        let diagnostics = await rule.lint(source: "func foo() {}")
+        let diagnostics = rule.lint(source: "func foo() {}")
         #expect(diagnostics.isEmpty)
     }
 
     @Test("no error for fileprivate func")
     func fileprivateFuncBelowThreshold() async {
-        let diagnostics = await rule.lint(source: "fileprivate func foo() {}")
+        let diagnostics = rule.lint(source: "fileprivate func foo() {}")
         #expect(diagnostics.isEmpty)
     }
 
     @Test("no error for private func")
     func privateFuncBelowThreshold() async {
-        let diagnostics = await rule.lint(source: "private func foo() {}")
+        let diagnostics = rule.lint(source: "private func foo() {}")
         #expect(diagnostics.isEmpty)
     }
 
     @Test("no error for internal struct")
     func internalStructBelowThreshold() async {
-        let diagnostics = await rule.lint(source: "internal struct Foo {}")
+        let diagnostics = rule.lint(source: "internal struct Foo {}")
         #expect(diagnostics.isEmpty)
     }
 
@@ -153,7 +153,7 @@ struct MissingDocsRuleTests {
         // This is a regular comment, not a doc comment.
         public func foo() {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(!diagnostics.isEmpty, "Regular comment should not satisfy doc requirement")
     }
 
@@ -163,7 +163,7 @@ struct MissingDocsRuleTests {
         /* regular block comment */
         public func foo() {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(!diagnostics.isEmpty, "Block comment should not satisfy doc requirement")
     }
 
@@ -171,7 +171,7 @@ struct MissingDocsRuleTests {
 
     @Test("error when package struct lacks doc comment")
     func packageStructWithoutDoc() async {
-        let diagnostics = await rule.lint(source: "package struct Foo {}")
+        let diagnostics = rule.lint(source: "package struct Foo {}")
         #expect(!diagnostics.isEmpty)
     }
 
@@ -181,7 +181,7 @@ struct MissingDocsRuleTests {
         /// Documented.
         package struct Foo {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -190,37 +190,37 @@ struct MissingDocsRuleTests {
     @Test("YAML min_access_level: package fires for package but not internal")
     func yamlMinPackageFiresForPackage() async {
         let source = "package func foo() {}"
-        let diagnostics = await rule.lint(source: source, argsYAML: "min_access_level: package\n")
+        let diagnostics = rule.lint(source: source, argsYAML: "min_access_level: package\n")
         #expect(!diagnostics.isEmpty)
     }
 
     @Test("YAML min_access_level: package does not fire for internal")
     func yamlMinPackageDoesNotFireForInternal() async {
         let source = "internal func foo() {}"
-        let diagnostics = await rule.lint(source: source, argsYAML: "min_access_level: package\n")
+        let diagnostics = rule.lint(source: source, argsYAML: "min_access_level: package\n")
         #expect(diagnostics.isEmpty)
     }
 
     @Test("YAML min_access_level: internal fires for explicit internal func")
     func yamlMinInternalFiresForInternal() async {
         let source = "internal func foo() {}"
-        let diagnostics = await rule.lint(source: source, argsYAML: "min_access_level: internal\n")
+        let diagnostics = rule.lint(source: source, argsYAML: "min_access_level: internal\n")
         #expect(!diagnostics.isEmpty)
     }
 
     @Test("YAML min_access_level: internal does not fire for private")
     func yamlMinInternalDoesNotFireForPrivate() async {
         let source = "private func foo() {}"
-        let diagnostics = await rule.lint(source: source, argsYAML: "min_access_level: internal\n")
+        let diagnostics = rule.lint(source: source, argsYAML: "min_access_level: internal\n")
         #expect(diagnostics.isEmpty)
     }
 
     @Test("YAML min_access_level: open only fires for open")
     func yamlMinOpenOnlyFiresForOpen() async {
-        let publicDiag = await rule.lint(source: "public func foo() {}", argsYAML: "min_access_level: open\n")
+        let publicDiag = rule.lint(source: "public func foo() {}", argsYAML: "min_access_level: open\n")
         #expect(publicDiag.isEmpty)
 
-        let openDiag = await rule.lint(source: "open func foo() {}", argsYAML: "min_access_level: open\n")
+        let openDiag = rule.lint(source: "open func foo() {}", argsYAML: "min_access_level: open\n")
         #expect(!openDiag.isEmpty)
     }
 
@@ -233,7 +233,7 @@ struct MissingDocsRuleTests {
             func bar() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty, "Members without explicit modifier should not trigger (v1 policy)")
     }
 
@@ -244,7 +244,7 @@ struct MissingDocsRuleTests {
             public func bar() {}
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(!diagnostics.isEmpty)
     }
 
@@ -259,7 +259,7 @@ struct MissingDocsRuleTests {
             case south
         }
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.isEmpty)
     }
 
@@ -267,7 +267,7 @@ struct MissingDocsRuleTests {
 
     @Test("empty file produces no diagnostics")
     func emptyFile() async {
-        let diagnostics = await rule.lint(source: "")
+        let diagnostics = rule.lint(source: "")
         #expect(diagnostics.isEmpty)
     }
 
@@ -277,14 +277,14 @@ struct MissingDocsRuleTests {
         public func foo() {}
         public func bar() {}
         """
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 2)
     }
 
     @Test("diagnostic message contains the declaration name")
     func diagnosticMessageContainsName() async {
         let source = "public func myFancyFunction() {}"
-        let diagnostics = await rule.lint(source: source)
+        let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
         #expect(diagnostics[0].message.contains("myFancyFunction"))
     }
@@ -293,7 +293,7 @@ struct MissingDocsRuleTests {
 
     @Test("default severity is error")
     func defaultSeverityIsError() async {
-        let diagnostics = await rule.lint(source: "public func foo() {}")
+        let diagnostics = rule.lint(source: "public func foo() {}")
         #expect(!diagnostics.isEmpty)
         #expect(diagnostics[0].severity == .error)
     }
