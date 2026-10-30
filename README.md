@@ -97,7 +97,7 @@ rules:
 | `english-comments` | 通常コメント・ドキュメントコメントの非ラテン文字を検出し、英語での記述を要求 | error |
 | `missing-docs` | 公開宣言にドキュメントコメント必須 | error |
 | `meaningful-suite-description` | 冗長な `@Suite` description を検出 | warning |
-| `test-function-naming` | `@Test` 関数の命名規約 | warning |
+| `test-function-naming` | `@Test` 関数の命名規約 | error |
 
 `indentation` は構文の入れ子に応じて4・8・12スペースのように検査する。継続式の行は
 4スペース単位で検査し、コメント・空行・文字列や正規表現リテラルの内容は対象外とする。
@@ -121,6 +121,39 @@ Unicode の句読点・記号・絵文字・アクセント付きラテン文字
 各ルールは1ルール1ファイル（`Sources/Rules/*Rule.swift`）で実装し、`Sources/Rules/Rules.swift` で
 `RuleSet` として合成している。すべて `ParameterizedRule` で、severity や閾値などを
 `.swift-ast-lint.yml` の `args` から上書きできる。
+
+### Test names and documentation exclusions
+
+`test-function-naming` flags `@Test` names containing spaces or underscores and names beginning
+with `test`, case-insensitively. Each check can be disabled independently:
+
+```yaml
+rules:
+  test-function-naming:
+    args:
+      check_spaces: true
+      check_underscores: true
+      check_test_prefix: true
+```
+
+`missing-docs` supports regular expressions in an `ignore_patterns` entry:
+
+```yaml
+rules:
+  missing-docs:
+    args:
+      ignore_patterns:
+        - kinds: [struct]
+          name_pattern: "Reducer$"
+        - kinds: [var]
+          modifiers: [static]
+          names: [shared]
+          name_pattern: "^preview"
+```
+
+When both `names` and `name_pattern` are present, either name match is sufficient; all specified
+kind and modifier filters must still match. Invalid regular expressions never match, so they do
+not accidentally suppress unrelated diagnostics.
 
 ## 開発
 
