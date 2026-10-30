@@ -1,26 +1,50 @@
 import SwiftASTLint
 import SwiftSyntax
 
-/// Detects `@Test` functions whose name is a backtick-quoted natural-language phrase
-/// (e.g. `` func `foo does bar`() `` ) and requires using lowerCamelCase with the
-/// description moved into `@Test("…")` instead.
-///
-/// **Triggers when:**
-/// - A function is annotated with `@Test` (with or without arguments)
-/// - The function name contains spaces (i.e. is backtick-quoted as a sentence)
-///
-/// **Does NOT trigger when:**
-/// - The function name is a backtick-escaped Swift keyword (no spaces, e.g. `` `default` ``)
-/// - The function has no `@Test` attribute
+/// Enforces Swift Testing names without spaces, underscores or a redundant `test` prefix.
+/// Each naming check can be enabled independently. Functions without `@Test` and escaped
+/// Swift keywords without spaces are not checked.
 struct TestFunctionNamingArgs: Codable {
     var severity: Severity = .error
+    var checkSpaces: Bool = true
+    var checkUnderscores: Bool = true
+    var checkTestPrefix: Bool = true
+
+    enum CodingKeys: String, CodingKey {
+        case severity
+        case checkSpaces = "check_spaces"
+        case checkUnderscores = "check_underscores"
+        case checkTestPrefix = "check_test_prefix"
+    }
+
+    init(
+        severity: Severity = .error,
+        checkSpaces: Bool = true,
+        checkUnderscores: Bool = true,
+        checkTestPrefix: Bool = true
+    ) {
+        self.severity = severity
+        self.checkSpaces = checkSpaces
+        self.checkUnderscores = checkUnderscores
+        self.checkTestPrefix = checkTestPrefix
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        severity = try container.decodeIfPresent(Severity.self, forKey: .severity) ?? .error
+        checkSpaces = try container.decodeIfPresent(Bool.self, forKey: .checkSpaces) ?? true
+        checkUnderscores = try container.decodeIfPresent(
+            Bool.self, forKey: .checkUnderscores
+        ) ?? true
+        checkTestPrefix = try container.decodeIfPresent(Bool.self, forKey: .checkTestPrefix) ?? true
+    }
 }
 
 let testFunctionNamingRule = ParameterizedRule(
     id: "test-function-naming",
     defaultArguments: TestFunctionNamingArgs(),
 ) { file, context, args in
-    let visitor = TestFunctionNamingVisitor(context: context, severity: args.severity)
+    let visitor = TestFunctionNamingVisitor(context: context, args: args)
     visitor.walk(file)
 }
 
@@ -28,27 +52,31 @@ let testFunctionNamingRule = ParameterizedRule(
 
 private final class TestFunctionNamingVisitor: SyntaxVisitor {
     let context: LintContext
-    let severity: Severity
+    let args: TestFunctionNamingArgs
 
-    init(context: LintContext, severity: Severity) {
+    init(context: LintContext, args: TestFunctionNamingArgs) {
         self.context = context
-        self.severity = severity
+        self.args = args
         super.init(viewMode: .sourceAccurate)
     }
 
     override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
         guard hasTestAttribute(node.attributes) else { return .visitChildren }
         let rawName = node.name.text
-        guard nameContainsSpaces(rawName) else { return .visitChildren }
-
-        context.report(
-            on: node,
-            message: """
-            @Test function name "\(rawName)" uses a backtick-quoted phrase. \
-            Use lowerCamelCase and move the description into @Test("…") instead.
-            """,
-            severity: severity,
-        )
+        let message: String
+        if args.checkSpaces, rawName.contains(" ") {
+            message = "@Test function name \"\(rawName)\" uses a backtick-quoted phrase. "
+                + "Use lowerCamelCase and move the description into @Test(\"…\") instead."
+        } else if args.checkUnderscores, rawName.contains("_") {
+            message = "@Test function name \"\(rawName)\" is underscore-separated. "
+                + "Use lowerCamelCase instead."
+        } else if args.checkTestPrefix, rawName.lowercased().hasPrefix("test") {
+            message = "@Test function name \"\(rawName)\" starts with \"test\", "
+                + "which is redundant. Drop the prefix and use lowerCamelCase."
+        } else {
+            return .visitChildren
+        }
+        context.report(on: node, message: message, severity: args.severity)
         return .visitChildren
     }
 
@@ -60,12 +88,5 @@ private final class TestFunctionNamingVisitor: SyntaxVisitor {
             guard let name = attr.attributeName.as(IdentifierTypeSyntax.self) else { return false }
             return name.name.text == "Test"
         }
-    }
-
-    /// Returns true when the identifier text (as stored by SwiftSyntax, without backticks)
-    /// contains at least one space — which means it was written as a backtick-quoted phrase.
-    /// Single-word backtick escapes like `` `default` `` have no spaces and are excluded.
-    private func nameContainsSpaces(_ name: String) -> Bool {
-        name.contains(" ")
     }
 }

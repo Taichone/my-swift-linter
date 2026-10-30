@@ -148,4 +148,57 @@ struct TestFunctionNamingRuleTests {
         let diagnostics = rule.lint(source: source)
         #expect(diagnostics.count == 1)
     }
+
+    @Test("underscore and test-prefix names are flagged by default")
+    func underscoreAndPrefixNames() {
+        let source = """
+        @Test func decode_returnsValue() {}
+        @Test func testDecoding() {}
+        @Test func TESTUppercase() {}
+        @Test func testing() {}
+        @Test func validateTestInput() {}
+        func test_helper() {}
+        """
+        let diagnostics = rule.lint(source: source)
+        #expect(diagnostics.count == 4)
+        #expect(diagnostics.allSatisfy { $0.severity == .error })
+    }
+
+    @Test("each naming pattern can be disabled independently")
+    func independentChecks() {
+        let source = """
+        @Test func `spaced name`() {}
+        @Test func name_with_underscores() {}
+        @Test func testPrefix() {}
+        """
+        let cases = [
+            ("check_spaces: false", 2),
+            ("check_underscores: false", 2),
+            ("check_test_prefix: false", 2),
+            ("check_spaces: false\ncheck_underscores: false\ncheck_test_prefix: false", 0),
+        ]
+        for (args, expected) in cases {
+            let diagnostics = rule.lint(source: source, argsYAML: args)
+            #expect(diagnostics.count == expected)
+        }
+    }
+
+    @Test("overlapping naming patterns produce one diagnostic and honor severity")
+    func overlappingPatterns() {
+        let source = "@Test func test_case() {}"
+        let diagnostics = rule.lint(source: source, argsYAML: "severity: warning")
+        #expect(diagnostics.count == 1)
+        #expect(diagnostics.first?.severity == .warning)
+
+        let prefixOnly = rule.lint(
+            source: source,
+            argsYAML: "check_underscores: false\ncheck_test_prefix: true"
+        )
+        #expect(prefixOnly.count == 1)
+        let neither = rule.lint(
+            source: source,
+            argsYAML: "check_underscores: false\ncheck_test_prefix: false"
+        )
+        #expect(neither.isEmpty)
+    }
 }
